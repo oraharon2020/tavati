@@ -7,6 +7,6 @@ export default function robots(): MetadataRoute.Robots {
       allow: '/',
       disallow: ['/api/', '/my-area/', '/admin/'],
     },
-    sitemap: 'https://tavati.co.il/sitemap.xml',
+    sitemap: 'https://tavati.app/sitemap.xml',
   }
 }

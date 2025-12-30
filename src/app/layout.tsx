@@ -6,7 +6,7 @@ import { ToastProvider } from "@/components/Toast";
 import { Analytics } from "@vercel/analytics/react";
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://tavati.co.il"),
+  metadataBase: new URL("https://tavati.app"),
   title: "תבעתי - תביעות קטנות בקלות | כתב תביעה תוך דקות",
   description: "צרו כתב תביעה מקצועי לבית משפט לתביעות קטנות תוך דקות. המערכת החכמה שמנחה אתכם צעד אחר צעד. ללא צורך בעורך דין. רק ₪79.",
   keywords: [
@@ -40,7 +40,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "he_IL",
-    url: "https://tavati.co.il",
+    url: "https://tavati.app",
     siteName: "תבעתי",
     title: "תבעתי - תביעות קטנות בקלות",
     description: "צרו כתב תביעה מקצועי לבית משפט לתביעות קטנות תוך דקות. ללא צורך בעורך דין.",
@@ -60,7 +60,7 @@ export const metadata: Metadata = {
     images: ["/logo.png"],
   },
   alternates: {
-    canonical: "https://tavati.co.il",
+    canonical: "https://tavati.app",
   },
   icons: {
     icon: "/icon.png",
@@ -79,20 +79,20 @@ export default function RootLayout({
     "@graph": [
       {
         "@type": "WebSite",
-        "@id": "https://tavati.co.il/#website",
-        "url": "https://tavati.co.il",
+        "@id": "https://tavati.app/#website",
+        "url": "https://tavati.app",
         "name": "תבעתי",
         "description": "תביעות קטנות בקלות - כתב תביעה מקצועי תוך דקות",
         "inLanguage": "he-IL"
       },
       {
         "@type": "Organization",
-        "@id": "https://tavati.co.il/#organization",
+        "@id": "https://tavati.app/#organization",
         "name": "תבעתי",
-        "url": "https://tavati.co.il",
+        "url": "https://tavati.app",
         "logo": {
           "@type": "ImageObject",
-          "url": "https://tavati.co.il/logo.png"
+          "url": "https://tavati.app/logo.png"
         },
         "contactPoint": {
           "@type": "ContactPoint",

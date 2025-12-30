@@ -82,7 +82,7 @@ export default function PrivacyPage() {
           <section>
             <h2 className="text-xl font-bold mt-8 mb-4">7. יצירת קשר</h2>
             <p>
-              לשאלות בנוגע לפרטיות, ניתן לפנות אלינו בדוא"ל: privacy@tavati.co.il
+              לשאלות בנוגע לפרטיות, ניתן לפנות אלינו בדוא"ל: privacy@tavati.app
             </p>
           </section>
         </div>

@@ -40,8 +40,8 @@ export default function ShareReferral({ phone }: ShareReferralProps) {
   };
 
   const shareUrl = referralCode 
-    ? `https://tavati.co.il/?ref=${referralCode}` 
-    : "https://tavati.co.il";
+    ? `https://tavati.app/?ref=${referralCode}` 
+    : "https://tavati.app";
 
   const shareText = `השתמשתי בתבעתי להגשת תביעה קטנה - ממליץ בחום! 🎯\nעם הקישור שלי תקבלו 10% הנחה:\n${shareUrl}`;
 

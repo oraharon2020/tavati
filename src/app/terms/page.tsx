@@ -64,7 +64,7 @@ export default function TermsPage() {
           <section>
             <h2 className="text-xl font-bold mt-8 mb-4">7. יצירת קשר</h2>
             <p>
-              לשאלות בנוגע לתנאי שימוש אלה, ניתן לפנות אלינו בדוא"ל: support@tavati.co.il
+              לשאלות בנוגע לתנאי שימוש אלה, ניתן לפנות אלינו בדוא"ל: support@tavati.app
             </p>
           </section>
         </div>

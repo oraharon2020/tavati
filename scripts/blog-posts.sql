@@ -181,7 +181,7 @@ true, NOW(), NOW()),
 
 ---
 
-*רוצים עזרה בהכנת התביעה? התחילו עכשיו ב-tavati.co.il*', 
+*רוצים עזרה בהכנת התביעה? התחילו עכשיו ב-tavati.app*', 
 true, NOW(), NOW()),
 
 -- Post 3: Suing telecom companies
@@ -284,7 +284,7 @@ true, NOW(), NOW()),
 
 ---
 
-*נתקעתם עם חברת סלולר? התחילו תביעה ב-tavati.co.il*', 
+*נתקעתם עם חברת סלולר? התחילו תביעה ב-tavati.app*', 
 true, NOW(), NOW()),
 
 -- Post 4: Insurance claims
@@ -384,7 +384,7 @@ true, NOW(), NOW()),
 
 ---
 
-*ביטוח דחו תביעה? בואו ננסח תביעה חזקה ב-tavati.co.il*', 
+*ביטוח דחו תביעה? בואו ננסח תביעה חזקה ב-tavati.app*', 
 true, NOW(), NOW()),
 
 -- Post 5: Contractor claims
@@ -489,5 +489,5 @@ true, NOW(), NOW()),
 
 ---
 
-*קבלן עשה לכם צרות? בואו נבנה תביעה חזקה ב-tavati.co.il*', 
+*קבלן עשה לכם צרות? בואו נבנה תביעה חזקה ב-tavati.app*', 
 true, NOW(), NOW());

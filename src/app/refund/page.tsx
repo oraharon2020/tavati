@@ -43,7 +43,7 @@ export default function RefundPage() {
               במקרה של בעיה, ניתן לפנות אלינו:
             </p>
             <ul className="list-none space-y-2 mr-4">
-              <li>📧 דוא"ל: <a href="mailto:support@tavati.co.il" className="text-blue-600">support@tavati.co.il</a></li>
+              <li>📧 דוא"ל: <a href="mailto:support@tavati.app" className="text-blue-600">support@tavati.app</a></li>
               <li>⏰ זמן מענה: עד 24 שעות בימי עסקים</li>
             </ul>
             <p className="mt-4">בפנייה יש לציין:</p>

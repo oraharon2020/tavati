@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
     }
 
     // TODO: Send email notification to admin
-    // await sendEmail({ to: 'admin@tavati.co.il', subject: `פנייה חדשה: ${subject}`, ... })
+    // await sendEmail({ to: 'admin@tavati.app', subject: `פנייה חדשה: ${subject}`, ... })
 
     return NextResponse.json({ success: true });
   } catch (error) {

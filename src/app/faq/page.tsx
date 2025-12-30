@@ -280,7 +280,7 @@ export default function FAQPage() {
             <h3 className="font-bold text-2xl text-white mb-3">לא מצאת תשובה?</h3>
             <p className="text-blue-100 mb-6">אנחנו כאן לעזור בכל שאלה!</p>
             <a
-              href="mailto:support@tavati.co.il"
+              href="mailto:support@tavati.app"
               className="inline-flex items-center gap-2 px-8 py-4 bg-white text-blue-600 rounded-xl font-bold hover:bg-blue-50 transition-colors shadow-lg"
             >
               📧 שלח לנו מייל

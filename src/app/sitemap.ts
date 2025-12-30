@@ -20,7 +20,7 @@ async function getBlogPosts() {
 }
  
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = 'https://tavati.co.il'
+  const baseUrl = 'https://tavati.app'
   
   // Get blog posts from database
   const blogPosts = await getBlogPosts()

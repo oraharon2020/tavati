@@ -102,7 +102,7 @@ export async function POST(request: NextRequest) {
 
 function generateReminderMessage(sessionId: string, claimData?: { topic?: string }, isSecondReminder = false): string {
   const topicText = claimData?.topic ? ` בנושא "${claimData.topic}"` : "";
-  const directLink = `tavati.co.il/chat?session=${sessionId}`;
+  const directLink = `tavati.app/chat?session=${sessionId}`;
   
   const firstReminderMessages = [
     `היי! 👋 התחלת תביעה${topicText} באתר תבעתי אבל לא סיימת. רוצים לעזור לך להשלים? המשך מכאן: ${directLink}`,
@@ -120,7 +120,7 @@ function generateReminderMessage(sessionId: string, claimData?: { topic?: string
   const baseMessage = messages[Math.floor(Math.random() * messages.length)];
   
   // חובה להוסיף אופציית הסרה לפי חוק הספאם
-  return `${baseMessage}\n\nלהסרה: tavati.co.il/unsubscribe`;
+  return `${baseMessage}\n\nלהסרה: tavati.app/unsubscribe`;
 }
 
 async function sendSMS(phone: string, message: string): Promise<boolean> {

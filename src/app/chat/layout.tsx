@@ -6,10 +6,10 @@ export const metadata: Metadata = {
   openGraph: {
     title: "צור תביעה | תבעתי",
     description: "התחל להכין את כתב התביעה שלך עכשיו. מערכת חכמה שמנחה אותך צעד אחר צעד.",
-    url: "https://tavati.co.il/chat",
+    url: "https://tavati.app/chat",
   },
   alternates: {
-    canonical: "https://tavati.co.il/chat",
+    canonical: "https://tavati.app/chat",
   },
 };
 

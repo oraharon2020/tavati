@@ -152,13 +152,13 @@ export default function ContactPage() {
               </div>
             </a>
             <a
-              href="mailto:support@tavati.co.il"
+              href="mailto:support@tavati.app"
               className="flex items-center gap-3 p-4 bg-blue-50 rounded-xl hover:bg-blue-100 transition-colors"
             >
               <span className="text-2xl">📧</span>
               <div>
                 <div className="font-medium text-neutral-900">אימייל</div>
-                <div className="text-sm text-neutral-500">support@tavati.co.il</div>
+                <div className="text-sm text-neutral-500">support@tavati.app</div>
               </div>
             </a>
           </div>
