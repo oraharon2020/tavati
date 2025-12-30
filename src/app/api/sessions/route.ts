@@ -80,3 +80,54 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+// Delete session
+export async function DELETE(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const sessionId = searchParams.get("id");
+    const phone = searchParams.get("phone");
+
+    if (!sessionId || !phone) {
+      return NextResponse.json(
+        { error: "Session ID and phone required" },
+        { status: 400 }
+      );
+    }
+
+    // Verify ownership before delete
+    const { data: session } = await supabase
+      .from("chat_sessions")
+      .select("phone")
+      .eq("id", sessionId)
+      .single();
+
+    if (!session || session.phone !== phone) {
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 403 }
+      );
+    }
+
+    const { error } = await supabase
+      .from("chat_sessions")
+      .delete()
+      .eq("id", sessionId);
+
+    if (error) {
+      console.error("Error deleting session:", error);
+      return NextResponse.json(
+        { error: "Failed to delete session" },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("Sessions DELETE error:", error);
+    return NextResponse.json(
+      { error: "Server error" },
+      { status: 500 }
+    );
+  }
+}

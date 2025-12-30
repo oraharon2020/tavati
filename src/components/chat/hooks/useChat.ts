@@ -20,6 +20,7 @@ interface UseChatReturn {
   isLoading: boolean;
   currentStep: number;
   handleSubmit: (e?: React.FormEvent) => Promise<void>;
+  handleSendMessage: (text?: string) => Promise<void>;
   handleKeyDown: (e: React.KeyboardEvent<HTMLTextAreaElement>) => void;
   handleQuickAction: (text: string) => void;
   requestClaimGeneration: () => Promise<void>;
@@ -158,6 +159,78 @@ export function useChat({
     }
   }, [handleSubmit]);
 
+  // פונקציה לשליחת הודעה ישירה (עבור כפתורים וטפסים)
+  const handleSendMessage = useCallback(async (text?: string) => {
+    const messageText = text;
+    if (!messageText?.trim() || isLoading) return;
+    
+    // שלח ישירות בלי לעבור דרך ה-input
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      role: "user",
+      content: messageText,
+    };
+
+    setMessages((prev) => [...prev, userMessage]);
+    setIsLoading(true);
+    setShowWelcome(false);
+
+    try {
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          messages: [...messages, userMessage].map((m) => ({
+            role: m.role,
+            content: m.content,
+          })),
+        }),
+      });
+
+      if (!response.ok) throw new Error("Failed to fetch");
+
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+      
+      const assistantMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        role: "assistant",
+        content: "",
+      };
+      
+      setMessages((prev) => [...prev, assistantMessage]);
+
+      while (reader) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        
+        const text = decoder.decode(value);
+        assistantMessage.content += text;
+        setMessages((prev) => 
+          prev.map((m) => 
+            m.id === assistantMessage.id ? { ...m, content: assistantMessage.content } : m
+          )
+        );
+      }
+
+      // Save to session after message complete
+      const updatedMessages = [...messages, userMessage, assistantMessage];
+      saveToSession(updatedMessages, currentStep, claimData);
+    } catch (error) {
+      console.error("Error:", error);
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: (Date.now() + 1).toString(),
+          role: "assistant",
+          content: "מצטער, משהו השתבש. אנא נסה שוב.",
+        },
+      ]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [isLoading, messages, setMessages, setShowWelcome, saveToSession, currentStep, claimData]);
+
   const handleQuickAction = useCallback((text: string) => {
     setInput(text);
     setTimeout(() => handleSubmit(), 100);
@@ -226,6 +299,7 @@ export function useChat({
     isLoading,
     currentStep,
     handleSubmit,
+    handleSendMessage,
     handleKeyDown,
     handleQuickAction,
     requestClaimGeneration,

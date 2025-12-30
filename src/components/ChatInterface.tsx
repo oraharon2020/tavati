@@ -51,6 +51,7 @@ export default function ChatInterface({ sessionId, phone }: ChatInterfaceProps =
     setShowNextSteps: session.setShowNextSteps,
     setPdfDownloaded: session.setPdfDownloaded,
     hasPaid: session.hasPaid,
+    attachments: session.attachments,
   });
 
   // File upload hook
@@ -85,7 +86,7 @@ export default function ChatInterface({ sessionId, phone }: ChatInterfaceProps =
           onBack={() => setShowAttachmentsScreen(false)}
           onDownloadWithAttachments={() => {
             setShowAttachmentsScreen(false);
-            payment.handleGeneratePDF();
+            payment.handleGeneratePDF(true); // true = include attachments
           }}
         />
       );
@@ -95,7 +96,7 @@ export default function ChatInterface({ sessionId, phone }: ChatInterfaceProps =
       <NextStepsScreen
         claimData={session.claimData}
         attachments={session.attachments}
-        onGeneratePDF={payment.handleGeneratePDF}
+        onGeneratePDF={() => payment.handleGeneratePDF(false)} // false = without attachments
         onShowAttachments={() => setShowAttachmentsScreen(true)}
         onReset={session.resetChat}
       />
@@ -196,9 +197,10 @@ export default function ChatInterface({ sessionId, phone }: ChatInterfaceProps =
         </div>
 
         {/* Desktop: Full header */}
-        <div className="hidden sm:block px-4 py-3">
-          <div className="max-w-3xl mx-auto flex items-center justify-between">
-            <div className="flex items-center gap-3">
+        <div className="hidden sm:block px-6 py-4">
+          <div className="max-w-5xl mx-auto flex items-center justify-between gap-6">
+            {/* Left: Logo + Home */}
+            <div className="flex items-center gap-3 flex-shrink-0">
               <Link
                 href="/"
                 className="p-2 rounded-lg hover:bg-neutral-100 transition-colors"
@@ -209,12 +211,51 @@ export default function ChatInterface({ sessionId, phone }: ChatInterfaceProps =
               <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-emerald-500 flex items-center justify-center shadow-lg shadow-blue-500/20">
                 <Scale className="w-5 h-5 text-white" />
               </div>
-              <div>
-                <h1 className="font-bold text-lg text-gray-900">תבעתי</h1>
-                <p className="text-xs text-gray-500">מערכת הגשת תביעות</p>
+              <span className="font-bold text-lg text-gray-900">תבעתי</span>
+            </div>
+
+            {/* Center: Steps Progress - Clean with numbers and text */}
+            <div className="flex-1 flex items-center justify-center">
+              <div className="flex items-center gap-0">
+                {STEPS.map((step, index) => (
+                  <div key={step.id} className="flex items-center">
+                    <div className="flex flex-col items-center">
+                      <div
+                        className={cn(
+                          "w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all",
+                          chat.currentStep > step.id
+                            ? "bg-emerald-500 text-white"
+                            : chat.currentStep === step.id
+                            ? "bg-blue-600 text-white"
+                            : "bg-neutral-200 text-neutral-500"
+                        )}
+                      >
+                        {chat.currentStep > step.id ? "✓" : step.id}
+                      </div>
+                      <span className={cn(
+                        "text-[11px] mt-1 font-medium whitespace-nowrap",
+                        chat.currentStep > step.id
+                          ? "text-emerald-600"
+                          : chat.currentStep === step.id
+                          ? "text-blue-600"
+                          : "text-neutral-400"
+                      )}>
+                        {step.name}
+                      </span>
+                    </div>
+                    {index < STEPS.length - 1 && (
+                      <div className={cn(
+                        "w-10 h-[2px] mx-1.5 mt-[-14px]",
+                        chat.currentStep > step.id ? "bg-emerald-500" : "bg-neutral-200"
+                      )} />
+                    )}
+                  </div>
+                ))}
               </div>
             </div>
-            <div className="flex items-center gap-2">
+
+            {/* Right: Actions */}
+            <div className="flex items-center gap-3 flex-shrink-0">
               {session.hasPaid && (
                 <div className="flex items-center gap-1.5 text-sm bg-green-100 rounded-full px-3 py-1.5">
                   <CheckCircle2 className="w-4 h-4 text-green-600" />
@@ -223,57 +264,12 @@ export default function ChatInterface({ sessionId, phone }: ChatInterfaceProps =
               )}
               <button
                 onClick={session.resetChat}
-                className="p-2.5 rounded-lg hover:bg-[var(--secondary)] transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                className="p-2 rounded-lg hover:bg-neutral-100 transition-colors"
                 title="התחל מחדש"
                 aria-label="התחל שיחה חדשה"
               >
-                <RotateCcw className="w-5 h-5 text-[var(--muted)]" aria-hidden="true" />
+                <RotateCcw className="w-5 h-5 text-neutral-400" aria-hidden="true" />
               </button>
-            </div>
-          </div>
-
-          {/* Desktop: Steps Progress */}
-          <div className="max-w-3xl mx-auto mt-3 px-2">
-            {/* Progress Bar */}
-            <div className="relative h-2 bg-neutral-100 rounded-full overflow-hidden mb-3">
-              <motion.div
-                className="absolute top-0 left-0 h-full bg-gradient-to-r from-blue-500 to-emerald-500 rounded-full"
-                initial={{ width: 0 }}
-                animate={{ width: `${((chat.currentStep - 1) / (STEPS.length - 1)) * 100}%` }}
-                transition={{ duration: 0.5, ease: "easeOut" }}
-              />
-            </div>
-            
-            {/* Step Labels */}
-            <div className="flex items-center justify-between">
-              {STEPS.map((step) => (
-                <div key={step.id} className="flex flex-col items-center">
-                  <motion.div
-                    className={cn(
-                      "w-9 h-9 rounded-full flex items-center justify-center text-base transition-all shadow-sm",
-                      chat.currentStep > step.id
-                        ? "bg-emerald-500 text-white shadow-emerald-200"
-                        : chat.currentStep === step.id
-                        ? "bg-blue-500 text-white shadow-blue-200 ring-4 ring-blue-100"
-                        : "bg-white text-neutral-400 border-2 border-neutral-200"
-                    )}
-                    initial={false}
-                    animate={{
-                      scale: chat.currentStep === step.id ? 1.1 : 1,
-                    }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    {chat.currentStep > step.id ? "✓" : step.icon}
-                  </motion.div>
-                  <span className={cn(
-                    "text-[10px] mt-1.5 font-medium transition-colors",
-                    chat.currentStep === step.id ? "text-blue-600" : 
-                    chat.currentStep > step.id ? "text-emerald-600" : "text-neutral-400"
-                  )}>
-                    {step.name}
-                  </span>
-                </div>
-              ))}
             </div>
           </div>
         </div>
@@ -349,6 +345,7 @@ export default function ChatInterface({ sessionId, phone }: ChatInterfaceProps =
           showNextSteps={session.showNextSteps}
           onShowPreview={() => payment.setShowPreview(true)}
           onPaymentAndDownload={payment.handlePaymentAndDownload}
+          onSendMessage={chat.handleSendMessage}
         />
       </main>
 

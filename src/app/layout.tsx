@@ -158,6 +158,8 @@ export default function RootLayout({
           href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700&display=swap"
           rel="stylesheet"
         />
+        {/* Apple Pay SDK */}
+        <script type="text/javascript" src="https://meshulam.co.il/_media/js/apple_pay_sdk/sdk.min.js" async></script>
         {/* Meshulam Payment SDK */}
         <script
           dangerouslySetInnerHTML={{

@@ -67,6 +67,13 @@ function generateHTML(data: ClaimData): string {
     @page {
       size: A4;
       margin: 20mm 15mm 25mm 15mm;
+      
+      @bottom-center {
+        content: "עמוד " counter(page) " מתוך " counter(pages);
+        font-family: 'Rubik', 'David', sans-serif;
+        font-size: 9pt;
+        color: #666;
+      }
     }
     
     body {
@@ -77,18 +84,17 @@ function generateHTML(data: ClaimData): string {
       text-align: right;
       color: #000;
       background: #fff;
+      counter-reset: page;
     }
     
-    .watermark {
+    .page-number {
       position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%) rotate(-45deg);
-      font-size: 100pt;
-      color: rgba(180, 180, 180, 0.15);
-      font-weight: bold;
-      z-index: -1;
-      pointer-events: none;
+      bottom: 10mm;
+      left: 0;
+      right: 0;
+      text-align: center;
+      font-size: 9pt;
+      color: #666;
     }
     
     .header {
@@ -268,8 +274,6 @@ function generateHTML(data: ClaimData): string {
   </style>
 </head>
 <body>
-  <div class="watermark">טיוטה</div>
-  
   <div class="header">
     <div class="state-emblem">מדינת ישראל</div>
     <div class="state-emblem">הרשות השופטת</div>
@@ -408,17 +412,62 @@ function generateHTML(data: ClaimData): string {
   
   <div class="footer">
     מסמך זה הופק באמצעות מערכת "תבעתי" | ${today}
-    <br>
-    <strong>שימו לב:</strong> זוהי טיוטה בלבד עד להגשתה הרשמית לבית המשפט
   </div>
 </body>
 </html>
   `;
 }
 
+interface PDFAttachment {
+  name: string;
+  url?: string;
+  type: string;
+}
+
+function generateAttachmentsHTML(attachments: PDFAttachment[]): string {
+  if (!attachments || attachments.length === 0) return '';
+  
+  return attachments.map((attachment, idx) => {
+    const letter = String.fromCharCode(1488 + idx); // Hebrew letters: א, ב, ג...
+    const isImage = attachment.type?.startsWith('image/') || attachment.url?.startsWith('data:image');
+    
+    if (isImage && attachment.url) {
+      return `
+        <div class="attachment-page" style="page-break-before: always; padding: 20mm;">
+          <div style="text-align: center; margin-bottom: 15mm;">
+            <h2 style="font-size: 18pt; margin-bottom: 5mm;">נספח ${letter} - ${attachment.name}</h2>
+            <p style="font-size: 10pt; color: #666;">מצורף לכתב תביעה</p>
+          </div>
+          <div style="text-align: center;">
+            <img src="${attachment.url}" style="max-width: 100%; max-height: 220mm; object-fit: contain;" />
+          </div>
+        </div>
+      `;
+    } else {
+      // For non-image files, show a placeholder
+      return `
+        <div class="attachment-page" style="page-break-before: always; padding: 20mm;">
+          <div style="text-align: center; margin-bottom: 15mm;">
+            <h2 style="font-size: 18pt; margin-bottom: 5mm;">נספח ${letter} - ${attachment.name}</h2>
+            <p style="font-size: 10pt; color: #666;">מצורף לכתב תביעה</p>
+          </div>
+          <div style="text-align: center; padding: 40mm 20mm; border: 2px dashed #ccc; border-radius: 10px;">
+            <p style="font-size: 14pt; color: #666;">קובץ מסוג ${attachment.type || 'לא ידוע'}</p>
+            <p style="font-size: 12pt; color: #999; margin-top: 5mm;">יש לצרף את הקובץ בנפרד בעת הגשה לבית המשפט</p>
+          </div>
+        </div>
+      `;
+    }
+  }).join('');
+}
+
 export async function POST(request: NextRequest) {
   try {
-    const data: ClaimData = await request.json();
+    const body = await request.json();
+    
+    // Support both old format (data directly) and new format ({ claimData, attachments })
+    const data: ClaimData = body.claimData || body;
+    const attachments: PDFAttachment[] = body.attachments || [];
     
     const browser = await puppeteer.launch({
       headless: true,
@@ -427,12 +476,27 @@ export async function POST(request: NextRequest) {
     
     const page = await browser.newPage();
     
-    const html = generateHTML(data);
+    // Generate main claim HTML
+    let html = generateHTML(data);
+    
+    // If there are attachments, add them before closing </body>
+    if (attachments.length > 0) {
+      const attachmentsHtml = generateAttachmentsHTML(attachments);
+      html = html.replace('</body>', `${attachmentsHtml}</body>`);
+    }
+    
     await page.setContent(html, { waitUntil: 'networkidle0' });
     
     const pdfBuffer = await page.pdf({
       format: 'A4',
       printBackground: true,
+      displayHeaderFooter: true,
+      headerTemplate: '<div></div>',
+      footerTemplate: `
+        <div style="width: 100%; font-size: 9px; text-align: center; color: #666; font-family: Arial, sans-serif; padding: 5px 0;">
+          עמוד <span class="pageNumber"></span> מתוך <span class="totalPages"></span>
+        </div>
+      `,
       margin: {
         top: '15mm',
         bottom: '20mm',

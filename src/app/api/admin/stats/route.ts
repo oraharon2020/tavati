@@ -39,9 +39,10 @@ export async function GET() {
 
     // Sessions by status
     const byStatus = {
-      active: sessions?.filter(s => s.status === "active").length || 0,
+      in_progress: sessions?.filter(s => s.status === "in_progress").length || 0,
       completed: completedSessions,
       paid: paidSessions,
+      pending_payment: sessions?.filter(s => s.status === "pending_payment").length || 0,
     };
 
     // Last 7 days activity
@@ -68,14 +69,17 @@ export async function GET() {
         todaySessions,
         byStatus,
       },
-      recentSessions: sessions?.slice(0, 20).map(s => ({
+      recentSessions: sessions?.slice(0, 50).map(s => ({
         id: s.id,
         phone: s.phone,
         status: s.status,
         currentStep: s.current_step,
         createdAt: s.created_at,
         updatedAt: s.updated_at,
-        topic: s.claim_data?.topic || "לא צוין",
+        topic: s.claim_data?.claim?.type || "לא צוין",
+        defendant: s.claim_data?.defendant?.name || "",
+        amount: s.claim_data?.claim?.amount || 0,
+        plaintiff: s.claim_data?.plaintiff?.fullName || "",
       })),
     });
   } catch (error) {

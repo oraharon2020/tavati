@@ -240,13 +240,22 @@ export function NextStepsScreen({
           </button>
         </div>
 
-        {/* Start New */}
-        <button
-          onClick={onReset}
-          className="w-full mt-4 text-center text-sm text-gray-400 hover:text-gray-600 transition-colors"
-        >
-          התחל תביעה חדשה
-        </button>
+        {/* Bottom Links */}
+        <div className="flex flex-col sm:flex-row gap-3 mt-4 justify-center">
+          <button
+            onClick={onReset}
+            className="text-center text-sm text-gray-400 hover:text-gray-600 transition-colors"
+          >
+            התחל תביעה חדשה
+          </button>
+          <span className="hidden sm:inline text-gray-300">|</span>
+          <a
+            href="/"
+            className="text-center text-sm text-gray-400 hover:text-gray-600 transition-colors"
+          >
+            חזרה לדף הבית
+          </a>
+        </div>
       </div>
     </div>
   );

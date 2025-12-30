@@ -1,11 +1,13 @@
 "use client";
 
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Scale, CreditCard, Download, Eye, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Message } from "./types";
 import { ClaimData } from "@/lib/pdfGenerator";
+import { QuickReplyButtons, parseQuickReplies } from "./QuickReplyButtons";
+import { ChatInlineForm, parseInlineForm, FormType } from "./ChatInlineForm";
 
 interface ChatMessagesProps {
   messages: Message[];
@@ -15,9 +17,10 @@ interface ChatMessagesProps {
   showNextSteps: boolean;
   onShowPreview: () => void;
   onPaymentAndDownload: () => void;
+  onSendMessage?: (text: string) => void;
 }
 
-// עיבוד והצגת הודעות
+// עיבוד והצגת הודעות - מסיר גם BUTTONS ו-FORM תגים
 const formatMessage = (content: string) => {
   // הסתר JSON blocks - גם אלה שעדיין נכתבים (streaming)
   let formatted = content.replace(/```json[\s\S]*?(```|$)/g, "");
@@ -25,6 +28,9 @@ const formatMessage = (content: string) => {
   formatted = formatted.replace(/\{\s*"status"\s*:\s*"complete"[\s\S]*/g, "");
   // הסתר כל דבר שמתחיל ב-{ ונראה כמו JSON
   formatted = formatted.replace(/\{\s*"\s*[\s\S]*$/g, "");
+  // הסתר תגי BUTTONS ו-FORM
+  formatted = formatted.replace(/\[BUTTONS:[^\]]+\]/g, "");
+  formatted = formatted.replace(/\[FORM:\s*\w+\]/g, "");
   // נקה רווחים מיותרים
   formatted = formatted.replace(/\n{3,}/g, "\n\n").trim();
   // אם נשאר רק טקסט קצר אחרי הסרת JSON, הוסף הודעה
@@ -34,7 +40,7 @@ const formatMessage = (content: string) => {
   return formatted;
 };
 
-// רנדור טקסט עם markdown פשוט (בולד וקו מפריד)
+// רנדור טקסט עם markdown פשוט (בולד, קו מפריד, לינקים)
 const renderFormattedText = (text: string) => {
   const formatted = formatMessage(text);
   
@@ -47,22 +53,65 @@ const renderFormattedText = (text: string) => {
       return <hr key={lineIndex} className="my-3 border-[var(--border)]" />;
     }
     
-    // עיבוד בולד **text**
-    const parts = line.split(/(\*\*[^*]+\*\*)/g);
+    // עיבוד לינקים [text](url) ובולד **text**
+    const processLine = (text: string): React.ReactNode[] => {
+      const result: React.ReactNode[] = [];
+      let remaining = text;
+      let keyIndex = 0;
+      
+      while (remaining.length > 0) {
+        // חפש לינק [text](url)
+        const linkMatch = remaining.match(/\[([^\]]+)\]\(([^)]+)\)/);
+        // חפש בולד **text**
+        const boldMatch = remaining.match(/\*\*([^*]+)\*\*/);
+        
+        // מצא מה קודם
+        const linkIndex = linkMatch ? remaining.indexOf(linkMatch[0]) : Infinity;
+        const boldIndex = boldMatch ? remaining.indexOf(boldMatch[0]) : Infinity;
+        
+        if (linkIndex === Infinity && boldIndex === Infinity) {
+          // אין יותר תבניות, הוסף את השאר
+          result.push(remaining);
+          break;
+        }
+        
+        if (linkIndex < boldIndex) {
+          // לינק קודם
+          if (linkIndex > 0) {
+            result.push(remaining.slice(0, linkIndex));
+          }
+          result.push(
+            <a
+              key={`link-${keyIndex++}`}
+              href={linkMatch![2]}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-600 hover:text-blue-800 underline"
+            >
+              {linkMatch![1]}
+            </a>
+          );
+          remaining = remaining.slice(linkIndex + linkMatch![0].length);
+        } else {
+          // בולד קודם
+          if (boldIndex > 0) {
+            result.push(remaining.slice(0, boldIndex));
+          }
+          result.push(
+            <strong key={`bold-${keyIndex++}`} className="font-bold">
+              {boldMatch![1]}
+            </strong>
+          );
+          remaining = remaining.slice(boldIndex + boldMatch![0].length);
+        }
+      }
+      
+      return result;
+    };
     
     return (
       <span key={lineIndex}>
-        {parts.map((part, partIndex) => {
-          if (part.startsWith("**") && part.endsWith("**")) {
-            // בולד
-            return (
-              <strong key={partIndex} className="font-bold">
-                {part.slice(2, -2)}
-              </strong>
-            );
-          }
-          return part;
-        })}
+        {processLine(line)}
         {lineIndex < lines.length - 1 && <br />}
       </span>
     );
@@ -77,8 +126,11 @@ export function ChatMessages({
   showNextSteps,
   onShowPreview,
   onPaymentAndDownload,
+  onSendMessage,
 }: ChatMessagesProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [answeredButtons, setAnsweredButtons] = useState<Set<string>>(new Set());
+  const [answeredForms, setAnsweredForms] = useState<Set<string>>(new Set());
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -108,17 +160,63 @@ export function ChatMessages({
                 <Scale className="w-4 h-4 text-white" />
               </div>
             )}
-            <div
-              className={cn(
-                "max-w-[80%] rounded-2xl px-4 py-3",
-                message.role === "user"
-                  ? "bg-blue-600 text-white rounded-br-md shadow-md"
-                  : "bg-white text-gray-800 rounded-bl-md shadow-sm border border-gray-200 order-1"
-              )}
-            >
-              <div className="leading-relaxed text-[15px]">
-                {renderFormattedText(message.content)}
+            <div className="flex flex-col max-w-[80%] order-1">
+              <div
+                className={cn(
+                  "rounded-2xl px-4 py-3",
+                  message.role === "user"
+                    ? "bg-blue-600 text-white rounded-br-md shadow-md"
+                    : "bg-white text-gray-800 rounded-bl-md shadow-sm border border-gray-200"
+                )}
+              >
+                <div className="leading-relaxed text-[15px]">
+                  {renderFormattedText(message.content)}
+                </div>
               </div>
+              
+              {/* Quick Reply Buttons - only for last assistant message */}
+              {message.role === "assistant" && 
+               message.id === messages.filter(m => m.role === "assistant").slice(-1)[0]?.id &&
+               !answeredButtons.has(message.id) &&
+               !isLoading &&
+               onSendMessage && (() => {
+                const { buttons } = parseQuickReplies(message.content);
+                if (buttons && buttons.length > 0) {
+                  return (
+                    <QuickReplyButtons
+                      options={buttons}
+                      onSelect={(value) => {
+                        setAnsweredButtons(prev => new Set([...prev, message.id]));
+                        onSendMessage(value);
+                      }}
+                      disabled={isLoading}
+                    />
+                  );
+                }
+                return null;
+              })()}
+              
+              {/* Inline Form - only for last assistant message */}
+              {message.role === "assistant" && 
+               message.id === messages.filter(m => m.role === "assistant").slice(-1)[0]?.id &&
+               !answeredForms.has(message.id) &&
+               !isLoading &&
+               onSendMessage && (() => {
+                const { formType } = parseInlineForm(message.content);
+                if (formType) {
+                  return (
+                    <ChatInlineForm
+                      formType={formType}
+                      onSubmit={(data) => {
+                        setAnsweredForms(prev => new Set([...prev, message.id]));
+                        onSendMessage(data.text);
+                      }}
+                      disabled={isLoading}
+                    />
+                  );
+                }
+                return null;
+              })()}
             </div>
           </motion.div>
         ))}

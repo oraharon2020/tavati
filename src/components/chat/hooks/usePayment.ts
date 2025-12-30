@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
-import { ClaimData, generateClaimPDF } from "@/lib/pdfGenerator";
+import { ClaimData, generateClaimPDF, PDFAttachment } from "@/lib/pdfGenerator";
 import { BASE_PRICE } from "../constants";
-import { AppliedCoupon } from "../types";
+import { AppliedCoupon, Attachment } from "../types";
 
 interface UsePaymentProps {
   claimData: ClaimData | null;
@@ -12,6 +12,7 @@ interface UsePaymentProps {
   setShowNextSteps: React.Dispatch<React.SetStateAction<boolean>>;
   setPdfDownloaded: React.Dispatch<React.SetStateAction<boolean>>;
   hasPaid: boolean;
+  attachments?: Attachment[];
 }
 
 interface UsePaymentReturn {
@@ -33,7 +34,7 @@ interface UsePaymentReturn {
   calculateFinalPrice: () => number;
   handlePaymentAndDownload: () => void;
   processPayment: () => Promise<string | null>;
-  handleGeneratePDF: () => Promise<void>;
+  handleGeneratePDF: (withAttachments?: boolean) => Promise<void>;
   handlePaymentSuccess: () => void;
 }
 
@@ -44,6 +45,7 @@ export function usePayment({
   setShowNextSteps,
   setPdfDownloaded,
   hasPaid,
+  attachments = [],
 }: UsePaymentProps): UsePaymentReturn {
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
@@ -236,13 +238,22 @@ export function usePayment({
     }
   }, [claimData, currentSessionId, calculateFinalPrice]);
 
-  const handleGeneratePDF = useCallback(async () => {
+  const handleGeneratePDF = useCallback(async (withAttachments: boolean = false) => {
     if (!claimData) return;
     
     // אם כבר שילם, אפשר להוריד שוב
     if (hasPaid) {
       try {
-        await generateClaimPDF(claimData);
+        // Convert attachments to PDF format
+        const pdfAttachments: PDFAttachment[] = withAttachments && attachments.length > 0
+          ? attachments.map(a => ({
+              name: a.name,
+              url: a.url,
+              type: a.type,
+            }))
+          : [];
+        
+        await generateClaimPDF(claimData, pdfAttachments);
         setPdfDownloaded(true);
       } catch (error) {
         console.error("Failed to generate PDF:", error);
@@ -252,7 +263,7 @@ export function usePayment({
       // אם לא שילם, פתח מסך תשלום
       handlePaymentAndDownload();
     }
-  }, [claimData, hasPaid, handlePaymentAndDownload, setPdfDownloaded]);
+  }, [claimData, hasPaid, handlePaymentAndDownload, setPdfDownloaded, attachments]);
 
   return {
     showPaymentModal,

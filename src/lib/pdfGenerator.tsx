@@ -5,19 +5,34 @@ import { ClaimData, calculateFee } from "./types";
 // Re-export הטיפוסים לשימוש ברכיבים אחרים
 export type { ClaimData } from "./types";
 
+export interface PDFAttachment {
+  name: string;
+  url?: string; // base64 data URL or external URL
+  type: string;
+}
+
 // פונקציה להורדת ה-PDF - קוראת ל-API שמייצר PDF עם Puppeteer
-export async function generateClaimPDF(data: ClaimData): Promise<void> {
+export async function generateClaimPDF(data: ClaimData, attachments?: PDFAttachment[]): Promise<void> {
   const response = await fetch('/api/generate-pdf', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify(data),
+    body: JSON.stringify({ 
+      claimData: data, 
+      attachments: attachments || [] 
+    }),
   });
 
   if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error || 'Failed to generate PDF');
+    let errorMessage = 'Failed to generate PDF';
+    try {
+      const error = await response.json();
+      errorMessage = error.error || errorMessage;
+    } catch {
+      // If response is not JSON, use default error
+    }
+    throw new Error(errorMessage);
   }
 
   const blob = await response.blob();
