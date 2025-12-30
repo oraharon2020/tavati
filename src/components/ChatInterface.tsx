@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
-import { Send, Loader2, Scale, RotateCcw, FileText, Download, CheckCircle2, MapPin, CreditCard, FileCheck, ArrowLeft, Paperclip, Upload, X, MessageSquare, Plus, Image, File, Trash2, Eye, Shield } from "lucide-react";
+import { Send, Loader2, Scale, RotateCcw, FileText, Download, CheckCircle2, MapPin, CreditCard, FileCheck, ArrowLeft, Paperclip, Upload, X, MessageSquare, Plus, Image, File, Trash2, Eye, Shield, Tag, Home } from "lucide-react";
 import { cn } from "@/lib/utils";
+import Link from "next/link";
 import { INITIAL_MESSAGE } from "@/lib/prompts";
 import { motion, AnimatePresence } from "framer-motion";
 import { generateClaimPDF, type ClaimData } from "@/lib/pdfGenerator";
@@ -53,6 +54,14 @@ export default function ChatInterface({ sessionId, phone }: ChatInterfaceProps =
   const [showPreview, setShowPreview] = useState(false);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const [couponCode, setCouponCode] = useState("");
+  const [couponLoading, setCouponLoading] = useState(false);
+  const [appliedCoupon, setAppliedCoupon] = useState<{
+    code: string;
+    discount_type: "percentage" | "fixed";
+    discount_value: number;
+  } | null>(null);
+  const [couponError, setCouponError] = useState("");
   const [isLoadingSession, setIsLoadingSession] = useState(!!sessionId);
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -463,6 +472,52 @@ ${data.content.slice(0, 8000)}${data.content.length > 8000 ? "\n...(קוצר)" :
   const handleQuickAction = (text: string) => {
     setInput(text);
     setTimeout(() => handleSubmit(), 100);
+  };
+
+  // בדיקת קופון
+  const validateCoupon = async () => {
+    if (!couponCode.trim()) return;
+    
+    setCouponLoading(true);
+    setCouponError("");
+    
+    try {
+      const res = await fetch("/api/coupon", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: couponCode.trim().toUpperCase() }),
+      });
+      
+      const data = await res.json();
+      
+      if (res.ok && data.valid) {
+        setAppliedCoupon({
+          code: data.coupon.code,
+          discount_type: data.coupon.discount_type,
+          discount_value: data.coupon.discount_value,
+        });
+        setCouponError("");
+      } else {
+        setCouponError(data.error || "קופון לא תקף");
+        setAppliedCoupon(null);
+      }
+    } catch {
+      setCouponError("שגיאה בבדיקת הקופון");
+    } finally {
+      setCouponLoading(false);
+    }
+  };
+
+  // חישוב מחיר סופי
+  const calculateFinalPrice = () => {
+    const basePrice = 79;
+    if (!appliedCoupon) return basePrice;
+    
+    if (appliedCoupon.discount_type === "percentage") {
+      return Math.round(basePrice * (1 - appliedCoupon.discount_value / 100));
+    } else {
+      return Math.max(0, basePrice - appliedCoupon.discount_value);
+    }
   };
 
   // תשלום והורדה
@@ -1038,8 +1093,15 @@ ${data.content.slice(0, 8000)}${data.content.length > 8000 ? "\n...(קוצר)" :
       <header className="sticky top-0 z-10 bg-white/95 backdrop-blur-sm border-b border-gray-200 px-4 py-3 shadow-sm">
         <div className="max-w-3xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-blue-600 to-emerald-500 flex items-center justify-center shadow-lg shadow-blue-500/20">
-              <Scale className="w-6 h-6 text-white" />
+            <Link
+              href="/"
+              className="p-2 rounded-lg hover:bg-neutral-100 transition-colors"
+              title="חזרה לדף הבית"
+            >
+              <Home className="w-5 h-5 text-neutral-500" />
+            </Link>
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-emerald-500 flex items-center justify-center shadow-lg shadow-blue-500/20">
+              <Scale className="w-5 h-5 text-white" />
             </div>
             <div>
               <h1 className="font-bold text-lg text-gray-900">תבעתי</h1>
@@ -1047,17 +1109,6 @@ ${data.content.slice(0, 8000)}${data.content.length > 8000 ? "\n...(קוצר)" :
             </div>
           </div>
           <div className="flex items-center gap-2">
-            {claimData && (
-              <button
-                onClick={handleGeneratePDF}
-                className="flex items-center gap-2 px-4 py-2.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-all text-sm font-medium shadow-lg shadow-emerald-500/25 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
-                aria-label="הורד כתב תביעה כקובץ PDF"
-              >
-                <Download className="w-4 h-4" aria-hidden="true" />
-                <span className="hidden sm:inline">הורד כתב תביעה</span>
-                <span className="sm:hidden">הורד</span>
-              </button>
-            )}
             <button
               onClick={resetChat}
               className="p-2.5 rounded-lg hover:bg-[var(--secondary)] transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
@@ -1149,9 +1200,62 @@ ${data.content.slice(0, 8000)}${data.content.length > 8000 ? "\n...(קוצר)" :
               </div>
 
               {/* Price */}
-              <div className="bg-gradient-to-br from-blue-50 to-emerald-50 rounded-xl p-4 mb-6 text-center border border-blue-100">
-                <div className="text-3xl font-bold text-blue-600">₪79</div>
-                <div className="text-sm text-neutral-500">תשלום חד פעמי</div>
+              <div className="bg-gradient-to-br from-blue-50 to-emerald-50 rounded-xl p-4 mb-4 text-center border border-blue-100">
+                {appliedCoupon ? (
+                  <>
+                    <div className="text-lg text-neutral-400 line-through">₪79</div>
+                    <div className="text-3xl font-bold text-emerald-600">₪{calculateFinalPrice()}</div>
+                    <div className="text-sm text-emerald-600 flex items-center justify-center gap-1 mt-1">
+                      <Tag className="w-3 h-3" />
+                      {appliedCoupon.discount_type === "percentage" 
+                        ? `${appliedCoupon.discount_value}% הנחה` 
+                        : `₪${appliedCoupon.discount_value} הנחה`}
+                      <span className="font-mono text-xs">({appliedCoupon.code})</span>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="text-3xl font-bold text-blue-600">₪79</div>
+                    <div className="text-sm text-neutral-500">תשלום חד פעמי</div>
+                  </>
+                )}
+              </div>
+
+              {/* Coupon Input */}
+              <div className="mb-4">
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={couponCode}
+                    onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                    placeholder="קוד קופון"
+                    disabled={!!appliedCoupon}
+                    className="flex-1 px-3 py-2 border border-neutral-300 rounded-lg text-sm text-neutral-900 bg-white disabled:bg-neutral-100 text-right"
+                    dir="rtl"
+                  />
+                  {appliedCoupon ? (
+                    <button
+                      onClick={() => {
+                        setAppliedCoupon(null);
+                        setCouponCode("");
+                      }}
+                      className="px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg text-sm"
+                    >
+                      הסר
+                    </button>
+                  ) : (
+                    <button
+                      onClick={validateCoupon}
+                      disabled={couponLoading || !couponCode.trim()}
+                      className="px-4 py-2 bg-neutral-100 text-neutral-700 rounded-lg text-sm hover:bg-neutral-200 disabled:opacity-50"
+                    >
+                      {couponLoading ? "..." : "החל"}
+                    </button>
+                  )}
+                </div>
+                {couponError && (
+                  <p className="text-xs text-red-500 mt-1">{couponError}</p>
+                )}
               </div>
 
               {/* What you get */}
@@ -1207,7 +1311,7 @@ ${data.content.slice(0, 8000)}${data.content.length > 8000 ? "\n...(קוצר)" :
                 ) : (
                   <>
                     <CreditCard className="w-5 h-5" />
-                    שלם ₪79 והורד
+                    שלם ₪{calculateFinalPrice()} והורד
                   </>
                 )}
               </button>

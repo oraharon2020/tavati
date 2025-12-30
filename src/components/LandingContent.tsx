@@ -3,8 +3,10 @@
 import { CheckCircle, Clock, Shield, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import ChatPreview from "@/components/ChatPreview";
+import TestimonialsCarousel from "@/components/TestimonialsCarousel";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import { motion } from "framer-motion";
 
 interface Props {
   blogSection: React.ReactNode;
@@ -38,113 +40,153 @@ export default function LandingContent({ blogSection }: Props) {
           
           {/* Subtle grid pattern */}
           <div 
-            className="absolute inset-0 opacity-[0.03]"
+            className="absolute inset-0 opacity-[0.08]"
             style={{
               backgroundImage: 'linear-gradient(#3b82f6 1px, transparent 1px), linear-gradient(90deg, #3b82f6 1px, transparent 1px)',
-              backgroundSize: '60px 60px'
+              backgroundSize: '50px 50px'
             }}
           />
         </div>
         
         <div className="max-w-7xl mx-auto w-full relative z-10">
-          <div className="grid md:grid-cols-2 gap-16 items-center">
+          <div className="grid md:grid-cols-2 gap-10 md:gap-16 items-center">
             {/* Right Side - Content */}
-            <div className="flex justify-center md:justify-end order-2 md:order-1">
-              <div className="max-w-lg">
-                <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-white/80 backdrop-blur border border-blue-100 rounded-full text-blue-700 text-sm font-medium mb-6 shadow-sm">
+            <motion.div 
+              className="flex justify-center md:justify-end order-1 md:order-1"
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, ease: "easeOut" }}
+            >
+              <div className="max-w-lg text-center md:text-right">
+                <motion.div 
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-white/90 backdrop-blur border border-blue-100 rounded-full text-blue-700 text-sm font-medium mb-6 shadow-sm"
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.2, duration: 0.4 }}
+                >
                   <span className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" aria-hidden="true"></span>
-                  כתיבת תביעות קטנות עם AI
-                </div>
+                  המערכת שתעזור לך לתבוע
+                </motion.div>
                 
-                <h1 id="hero-title" className="text-4xl md:text-5xl font-bold text-neutral-900 mb-4 leading-tight">
+                <motion.h1 
+                  id="hero-title" 
+                  className="text-4xl md:text-5xl font-bold text-neutral-900 mb-5 leading-tight"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3, duration: 0.5 }}
+                >
                   כתב תביעה מקצועי
                   <br />
-                  <span className="text-blue-600">תוך 5 דקות</span>
-                </h1>
+                  <span className="bg-gradient-to-l from-blue-600 to-blue-500 bg-clip-text text-transparent">בלי עורך דין</span>
+                </motion.h1>
 
-                <p className="text-lg text-neutral-600 mb-8 max-w-md">
-                  ענו על כמה שאלות פשוטות וקבלו כתב תביעה מוכן להגשה לבית משפט לתביעות קטנות
-                </p>
+                <motion.p 
+                  className="text-lg text-neutral-700 mb-8 max-w-md mx-auto md:mx-0 leading-relaxed"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.4, duration: 0.5 }}
+                >
+                  פשוט ספרו לנו מה קרה, ואנחנו נכין לכם כתב תביעה מושלם - מוכן להגשה תוך דקות
+                </motion.p>
 
-                <div className="flex flex-col sm:flex-row gap-4 mb-8">
+                <motion.div 
+                  className="flex flex-col sm:flex-row gap-4 mb-8 justify-center md:justify-start"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.5, duration: 0.5 }}
+                >
                   <Link
                     href="/chat"
-                    className="inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all font-semibold text-base shadow-lg shadow-blue-500/20 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                    className="inline-flex items-center justify-center gap-2 px-7 py-4 bg-gradient-to-l from-blue-600 to-blue-500 text-white rounded-xl hover:from-blue-700 hover:to-blue-600 transition-all font-semibold text-base shadow-lg shadow-blue-500/25 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 hover:scale-[1.02]"
                   >
-                    צרו תביעה עכשיו
+                    התחילו עכשיו - חינם
                     <ArrowLeft className="w-4 h-4" aria-hidden="true" />
                   </Link>
                   
                   <Link
                     href="#how-it-works"
-                    className="inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-white text-neutral-700 rounded-xl hover:bg-neutral-50 transition-all font-medium border border-neutral-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                    className="inline-flex items-center justify-center gap-2 px-6 py-4 bg-white text-neutral-800 rounded-xl hover:bg-neutral-50 transition-all font-medium border border-neutral-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                   >
                     איך זה עובד?
                   </Link>
-                </div>
+                </motion.div>
 
-                <div className="flex items-center gap-4 text-sm text-neutral-500">
-                  <div className="flex items-center gap-1">
-                    <Shield className="w-4 h-4 text-green-500" aria-hidden="true" />
-                    מאובטח
+                <motion.div 
+                  className="flex items-center gap-4 text-sm text-neutral-600 justify-center md:justify-start"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.7, duration: 0.5 }}
+                >
+                  <div className="flex items-center gap-1.5">
+                    <Shield className="w-4 h-4 text-emerald-500" aria-hidden="true" />
+                    <span>מאובטח 100%</span>
                   </div>
-                  <div className="flex items-center gap-1">
-                    <CheckCircle className="w-4 h-4 text-green-500" />
-                    תשלום רק לאחר קבלת התביעה
+                  <div className="flex items-center gap-1.5">
+                    <CheckCircle className="w-4 h-4 text-emerald-500" />
+                    <span>משלמים רק בסוף</span>
                   </div>
-                </div>
+                </motion.div>
               </div>
-            </div>
+            </motion.div>
             
             {/* Left Side - Chat Preview with floating effect */}
-            <div className="flex justify-center md:justify-start order-1 md:order-2">
+            <motion.div 
+              className="flex justify-center md:justify-start order-2 md:order-2"
+              initial={{ opacity: 0, y: 40, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ delay: 0.3, duration: 0.7, ease: "easeOut" }}
+            >
               <div className="relative">
                 {/* Glow effect behind */}
-                <div className="absolute inset-0 bg-blue-400/20 rounded-3xl blur-2xl transform scale-105" />
+                <div className="absolute inset-0 bg-gradient-to-br from-blue-400/30 to-emerald-400/20 rounded-3xl blur-2xl transform scale-110" />
                 
                 {/* Chat Preview Card */}
-                <div className="relative z-10 bg-white rounded-2xl shadow-2xl shadow-blue-900/10 overflow-hidden border border-neutral-200/50">
+                <motion.div 
+                  className="relative z-10 bg-white rounded-2xl shadow-2xl shadow-blue-900/15 overflow-hidden border border-neutral-200/50"
+                  whileHover={{ y: -5 }}
+                  transition={{ duration: 0.3 }}
+                >
                   <ChatPreview />
-                </div>
+                </motion.div>
               </div>
-            </div>
+            </motion.div>
           </div>
         </div>
       </section>
 
       {/* Trust Stats */}
-      <section className="py-12 px-6 bg-white border-b">
+      <section className="py-10 px-6 bg-white border-b">
         <div className="max-w-4xl mx-auto">
           <div className="grid grid-cols-3 gap-8 text-center">
             <div>
               <div className="text-3xl md:text-4xl font-bold text-blue-600">73%</div>
-              <div className="text-sm text-neutral-500 mt-1">שיעור הצלחה בתביעות</div>
+              <div className="text-sm text-neutral-600 mt-1">מהתביעות הקטנות מצליחות</div>
             </div>
             <div>
               <div className="text-3xl md:text-4xl font-bold text-blue-600">5 דק׳</div>
-              <div className="text-sm text-neutral-500 mt-1">זמן יצירת תביעה</div>
+              <div className="text-sm text-neutral-600 mt-1">וכתב התביעה מוכן</div>
             </div>
             <div>
               <div className="text-3xl md:text-4xl font-bold text-blue-600">₪79</div>
-              <div className="text-sm text-neutral-500 mt-1">מחיר קבוע</div>
+              <div className="text-sm text-neutral-600 mt-1">בלבד. בלי הפתעות</div>
             </div>
           </div>
         </div>
       </section>
 
       {/* How it Works */}
-      <section id="how-it-works" className="py-20 px-6 bg-neutral-50">
+      <section id="how-it-works" className="py-16 px-6 bg-neutral-50">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-neutral-900 mb-3">איך זה עובד?</h2>
-            <p className="text-lg text-neutral-600">3 שלבים פשוטים לכתב תביעה מקצועי</p>
+            <h2 className="text-3xl md:text-4xl font-bold text-neutral-900 mb-3">פשוט כמו לשלוח הודעה</h2>
+            <p className="text-lg text-neutral-600">תהליך קל שכל אחד יכול לעשות</p>
           </div>
           
           <div className="grid md:grid-cols-3 gap-8">
             {[
-              { num: "1", title: "ספרו מה קרה", desc: "ענו על כמה שאלות פשוטות על המקרה שלכם בשיחה קצרה" },
-              { num: "2", title: "המערכת כותבת", desc: "ה-AI מנתח את המקרה וכותב כתב תביעה מקצועי" },
-              { num: "3", title: "קבלו את התביעה", desc: "מורידים PDF מוכן להגשה ישירות לבית המשפט" }
+              { num: "1", title: "ספרו לנו מה קרה", desc: "כמו לספר לחבר טוב. בלי מילים משפטיות, בלי טפסים מסובכים" },
+              { num: "2", title: "אנחנו עושים את העבודה", desc: "המערכת הופכת את הסיפור שלכם לכתב תביעה משפטי מדויק" },
+              { num: "3", title: "מגישים ומנצחים", desc: "מורידים PDF, מגישים לבית המשפט, ותובעים את מה שמגיע לכם" }
             ].map((step) => (
               <div key={step.num} className="bg-white rounded-xl p-6 shadow-sm border border-neutral-100">
                 <div className="w-10 h-10 bg-blue-600 text-white rounded-lg flex items-center justify-center font-bold mb-4">
@@ -155,102 +197,131 @@ export default function LandingContent({ blogSection }: Props) {
               </div>
             ))}
           </div>
+          
+          <div className="text-center mt-8">
+            <Link
+              href="/how-it-works"
+              className="text-blue-600 hover:text-blue-700 font-medium inline-flex items-center gap-1"
+            >
+              לפרטים נוספים על התהליך
+              <ArrowLeft className="w-4 h-4" />
+            </Link>
+          </div>
         </div>
       </section>
 
       {/* Pricing */}
-      <section id="pricing" className="py-20 px-6 bg-white">
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-neutral-900 mb-3">מחיר פשוט ושקוף</h2>
-            <p className="text-lg text-neutral-600">ללא הפתעות, ללא עלויות נסתרות</p>
+      <section id="pricing" className="py-16 px-6 bg-gradient-to-b from-white via-blue-50/30 to-white">
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-10">
+            <span className="inline-block px-4 py-1.5 bg-blue-100 text-blue-700 rounded-full text-sm font-medium mb-4">
+              חיסכון של אלפי שקלים
+            </span>
+            <h2 className="text-3xl md:text-4xl font-bold text-neutral-900 mb-4">מחיר אחד. בלי הפתעות.</h2>
+            <p className="text-lg text-neutral-600 max-w-xl mx-auto">
+              עורך דין גובה אלפי שקלים על אותו הדבר בדיוק
+            </p>
           </div>
           
-          <div className="max-w-md mx-auto">
-            <div className="bg-gradient-to-br from-blue-600 to-blue-700 rounded-2xl p-8 text-white text-center shadow-xl shadow-blue-500/20">
-              <div className="text-5xl font-bold mb-2">₪79</div>
-              <p className="text-blue-100 mb-6">תשלום חד פעמי</p>
-              
-              <div className="space-y-3 text-right mb-8">
-                {[
-                  "כתב תביעה מקצועי מותאם למקרה שלכם",
-                  "מסמך PDF מוכן להגשה",
-                  "הדרכה להגשה עצמית",
-                  "תמיכה בווטסאפ",
-                ].map((item, i) => (
-                  <div key={i} className="flex items-center gap-3 text-blue-50">
-                    <CheckCircle className="w-5 h-5 text-blue-200 flex-shrink-0" />
-                    {item}
-                  </div>
-                ))}
+          <div className="max-w-lg mx-auto">
+            {/* Main Card */}
+            <div className="relative">
+              {/* Badge */}
+              <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-10">
+                <span className="bg-emerald-500 text-white px-4 py-1.5 rounded-full text-sm font-semibold shadow-lg">
+                  הכי משתלם
+                </span>
               </div>
               
-              <Link
-                href="/chat"
-                className="block w-full py-3 bg-white text-blue-600 rounded-xl font-semibold hover:bg-blue-50 transition-colors"
-              >
-                התחילו עכשיו
-              </Link>
-              
-              <div className="flex items-center justify-center gap-2 mt-4 text-sm text-blue-200">
-                <Clock className="w-4 h-4" />
-                משלמים רק אחרי שהתביעה מוכנה
+              <div className="bg-white rounded-3xl p-8 md:p-10 shadow-2xl shadow-blue-900/10 border border-neutral-200/80 relative overflow-hidden">
+                {/* Subtle gradient accent */}
+                <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-blue-500 via-blue-600 to-emerald-500" />
+                
+                {/* Price */}
+                <div className="text-center mb-8">
+                  <div className="flex items-baseline justify-center gap-1">
+                    <span className="text-6xl md:text-7xl font-bold text-neutral-900">79</span>
+                    <span className="text-2xl font-bold text-neutral-900">₪</span>
+                  </div>
+                  <p className="text-neutral-500 mt-2">תשלום חד פעמי בלבד</p>
+                </div>
+                
+                {/* Features */}
+                <div className="space-y-4 mb-8">
+                  {[
+                    { text: "כתב תביעה מקצועי מותאם אישית", icon: "📄" },
+                    { text: "קובץ PDF מוכן להגשה", icon: "✅" },
+                    { text: "הנחיות מפורטות להגשה עצמית", icon: "📋" },
+                    { text: "תמיכה אם יש שאלות", icon: "💬" },
+                  ].map((item, i) => (
+                    <div key={i} className="flex items-center gap-4 p-3 bg-neutral-50 rounded-xl">
+                      <span className="text-xl">{item.icon}</span>
+                      <span className="text-neutral-700 font-medium">{item.text}</span>
+                    </div>
+                  ))}
+                </div>
+                
+                {/* CTA Button */}
+                <Link
+                  href="/chat"
+                  className="block w-full py-4 bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-xl font-bold text-lg hover:from-blue-700 hover:to-blue-600 transition-all shadow-lg shadow-blue-500/25 text-center"
+                >
+                  התחילו עכשיו
+                </Link>
+                
+                {/* Trust note */}
+                <div className="flex items-center justify-center gap-2 mt-5 text-sm text-neutral-500">
+                  <Shield className="w-4 h-4 text-emerald-500" />
+                  <span>משלמים רק אחרי שרואים את התוצאה</span>
+                </div>
               </div>
             </div>
             
-            <div className="mt-6 text-center">
-              <p className="text-neutral-600">
-                <span className="font-semibold text-neutral-900">עו״ד גובה אלפי שקלים</span> על אותה עבודה
-              </p>
-              
-              <p className="text-sm text-neutral-500 mt-2">
-                חסכו 95% מהעלות ושמרו על 100% מהפיצוי
-              </p>
+            {/* Comparison */}
+            <div className="mt-10 grid grid-cols-2 gap-4 text-center">
+              <div className="bg-neutral-100 rounded-2xl p-5">
+                <p className="text-sm text-neutral-500 mb-1">עורך דין</p>
+                <p className="text-2xl font-bold text-neutral-400 line-through">₪2,000+</p>
+              </div>
+              <div className="bg-blue-50 rounded-2xl p-5 border-2 border-blue-200">
+                <p className="text-sm text-blue-600 mb-1">תבעתי</p>
+                <p className="text-2xl font-bold text-blue-600">₪79</p>
+              </div>
             </div>
+            
+            <p className="text-center text-sm text-neutral-500 mt-4">
+              אותה תוצאה. 96% פחות.
+            </p>
           </div>
         </div>
       </section>
 
       {/* Customer Testimonials / Trust */}
-      <section className="py-16 px-6 bg-neutral-50 border-y">
-        <div className="max-w-4xl mx-auto text-center">
-          <div className="flex items-center justify-center gap-2 mb-4">
-            {[1,2,3,4,5].map(i => (
-              <svg key={i} className="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-              </svg>
-            ))}
-          </div>
-          <p className="text-xl text-neutral-700 font-medium mb-2">
-            &quot;הגשתי תביעה נגד חברת הביטוח וזכיתי ב-5,000 ₪&quot;
-          </p>
-          <p className="text-sm text-neutral-500">— דניאל, תל אביב</p>
-        </div>
-      </section>
+      <TestimonialsCarousel />
 
       {/* Use Cases */}
-      <section className="py-20 px-6 bg-white">
+      <section className="py-16 px-6 bg-white">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-neutral-900 mb-3">באילו מקרים אפשר לתבוע?</h2>
-            <p className="text-lg text-neutral-600">המערכת מתאימה למגוון רחב של תביעות קטנות</p>
+            <h2 className="text-3xl md:text-4xl font-bold text-neutral-900 mb-3">על מה אפשר לתבוע?</h2>
+            <p className="text-lg text-neutral-600">כמעט על כל דבר עד ₪38,900</p>
           </div>
           
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             {[
-              { name: "תיירות וטיסות", desc: "ביטולים, עיכובים, מזוודות" },
-              { name: "שכירות ודיור", desc: "פיקדונות, ליקויים" },
-              { name: "ספאם והטרדות", desc: "הודעות פרסום, שיחות" },
-              { name: "צרכנות", desc: "מוצרים פגומים, אחריות" },
-              { name: "רכב ומוסכים", desc: "תיקונים, הונאות" },
-              { name: "שירות לקוי", desc: "ספקים, קבלנים" },
+              { name: "✈️ טיסות ותיירות", desc: "טיסה בוטלה? מזוודה נעלמה?" },
+              { name: "🏠 שכירות", desc: "לא מחזירים לך פיקדון?" },
+              { name: "📱 ספאם", desc: "מציקים לך בהודעות?" },
+              { name: "🛒 קניות", desc: "מוצר לא עובד? לא מחזירים כסף?" },
+              { name: "🚗 רכב", desc: "המוסך גבה יותר מדי?" },
+              { name: "🔧 שירות", desc: "קבלן לא סיים את העבודה?" },
             ].map((type) => (
               <div
                 key={type.name}
-                className="bg-neutral-50 rounded-xl p-5 border border-neutral-200 hover:border-blue-300 transition-colors"
+                className="bg-neutral-50 rounded-xl p-5 border border-neutral-200 hover:border-blue-300 hover:bg-blue-50/50 transition-colors"
               >
                 <h3 className="font-semibold text-neutral-900 mb-1">{type.name}</h3>
-                <p className="text-sm text-neutral-500">{type.desc}</p>
+                <p className="text-sm text-neutral-600">{type.desc}</p>
               </div>
             ))}
           </div>
@@ -261,43 +332,53 @@ export default function LandingContent({ blogSection }: Props) {
       {blogSection}
 
       {/* FAQ Section */}
-      <section id="faq" className="py-20 px-6 bg-neutral-50">
+      <section id="faq" className="py-16 px-6 bg-neutral-50">
         <div className="max-w-3xl mx-auto">
           <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-neutral-900 mb-3">שאלות נפוצות</h2>
+            <h2 className="text-3xl md:text-4xl font-bold text-neutral-900 mb-3">עוד שאלות?</h2>
           </div>
           
           <div className="space-y-4">
             {[
-              { q: "האם זה באמת עובד?", a: "כן. המערכת מבוססת על AI שנבנה בשיתוף עורכי דין. 73% מהתביעות הקטנות בישראל מסתיימות בהצלחה." },
-              { q: "כמה זמן לוקח?", a: "בממוצע 5 דקות לקבלת כתב תביעה מקצועי מוכן להגשה." },
-              { q: "צריך עורך דין?", a: "לא. תביעות קטנות מיועדות להגשה עצמית. המערכת מכינה את כל המסמכים הנדרשים." },
-              { q: "מתי משלמים?", a: "רק אחרי שהתביעה מוכנה ואתם מרוצים מהתוצאה." },
+              { q: "זה באמת עובד?", a: "בהחלט. 73% מהתביעות הקטנות בישראל מסתיימות בהצלחה. המערכת שלנו מכינה כתבי תביעה כמו עורך דין אמיתי." },
+              { q: "כמה זמן זה לוקח?", a: "5 דקות בערך. אתם עונים על כמה שאלות ומקבלים כתב תביעה מוכן." },
+              { q: "אני צריך עורך דין?", a: "לא! בית משפט לתביעות קטנות נבנה בדיוק בשביל שתוכלו לייצג את עצמכם. אנחנו מכינים לכם את כל מה שצריך." },
+              { q: "מתי משלמים?", a: "רק אחרי שרואים את כתב התביעה ומרוצים. אין סיכון." },
             ].map((item, i) => (
               <div key={i} className="bg-white rounded-lg border-b border-neutral-100 p-4">
                 <h3 className="font-semibold text-neutral-900 mb-2">{item.q}</h3>
-                <p className="text-neutral-600">{item.a}</p>
+                <p className="text-neutral-700">{item.a}</p>
               </div>
             ))}
+          </div>
+          
+          <div className="text-center mt-8">
+            <Link
+              href="/faq"
+              className="text-blue-600 hover:text-blue-700 font-medium inline-flex items-center gap-1"
+            >
+              לכל השאלות הנפוצות
+              <ArrowLeft className="w-4 h-4" />
+            </Link>
           </div>
         </div>
       </section>
 
       {/* Final CTA */}
-      <section className="py-20 px-6 bg-blue-600" aria-labelledby="cta-title">
+      <section className="py-16 px-6 bg-gradient-to-br from-blue-600 to-blue-700" aria-labelledby="cta-title">
         <div className="max-w-3xl mx-auto text-center text-white">
           <h2 id="cta-title" className="text-3xl md:text-4xl font-bold mb-4">
-            מוכנים להתחיל?
+            מגיע לכם יותר 💪
           </h2>
           <p className="text-lg mb-8 text-blue-100">
-            קבלו כתב תביעה מקצועי תוך דקות ספורות
+            בואו נכין לכם תביעה שתביא תוצאות
           </p>
           
           <Link
             href="/chat"
-            className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white text-blue-600 rounded-xl hover:bg-blue-50 transition-colors text-lg font-semibold focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-blue-600"
+            className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white text-blue-600 rounded-xl hover:bg-blue-50 transition-colors text-lg font-semibold focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-blue-600 shadow-lg"
           >
-            התחילו עכשיו
+            יאללה, מתחילים
             <ArrowLeft className="w-5 h-5" aria-hidden="true" />
           </Link>
         </div>

@@ -9,6 +9,38 @@ export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { isAuthenticated, phone } = useAuth();
 
+  const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    // Check if it's an anchor link on the same page
+    if (href.startsWith("/#") || href.startsWith("#")) {
+      e.preventDefault();
+      const targetId = href.replace("/#", "").replace("#", "");
+      
+      // Close mobile menu first
+      setMobileMenuOpen(false);
+      
+      // Small delay to let menu close, then scroll
+      setTimeout(() => {
+        const targetElement = document.getElementById(targetId);
+        
+        if (targetElement) {
+          // Get actual header height dynamically
+          const header = document.querySelector('header');
+          const headerHeight = header ? header.offsetHeight : 70;
+          const elementPosition = targetElement.getBoundingClientRect().top;
+          const offsetPosition = elementPosition + window.scrollY - headerHeight - 20;
+          
+          window.scrollTo({
+            top: offsetPosition,
+            behavior: "smooth"
+          });
+        }
+      }, 100);
+    } else {
+      // For regular links, just close mobile menu
+      setMobileMenuOpen(false);
+    }
+  };
+
   return (
     <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-neutral-100 shadow-sm" role="banner">
       {/* Skip to main content link for accessibility */}
@@ -34,16 +66,16 @@ export default function Header() {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-1" aria-label="ניווט ראשי">
-            <Link href="/" className="px-4 py-2 text-neutral-600 hover:text-neutral-900 hover:bg-blue-50 rounded-lg transition-colors">
+            <Link href="/" onClick={(e) => handleNavClick(e, "/")} className="px-4 py-2 text-neutral-600 hover:text-neutral-900 hover:bg-blue-50 rounded-lg transition-colors">
               בית
             </Link>
-            <Link href="/#how-it-works" className="px-4 py-2 text-neutral-600 hover:text-neutral-900 hover:bg-blue-50 rounded-lg transition-colors">
+            <Link href="/#how-it-works" onClick={(e) => handleNavClick(e, "/#how-it-works")} className="px-4 py-2 text-neutral-600 hover:text-neutral-900 hover:bg-blue-50 rounded-lg transition-colors">
               איך זה עובד
             </Link>
-            <Link href="/#pricing" className="px-4 py-2 text-neutral-600 hover:text-neutral-900 hover:bg-blue-50 rounded-lg transition-colors">
+            <Link href="/#pricing" onClick={(e) => handleNavClick(e, "/#pricing")} className="px-4 py-2 text-neutral-600 hover:text-neutral-900 hover:bg-blue-50 rounded-lg transition-colors">
               מחירים
             </Link>
-            <Link href="/#faq" className="px-4 py-2 text-neutral-600 hover:text-neutral-900 hover:bg-blue-50 rounded-lg transition-colors">
+            <Link href="/#faq" onClick={(e) => handleNavClick(e, "/#faq")} className="px-4 py-2 text-neutral-600 hover:text-neutral-900 hover:bg-blue-50 rounded-lg transition-colors">
               שאלות נפוצות
             </Link>
           </nav>
@@ -85,20 +117,20 @@ export default function Header() {
         {mobileMenuOpen && (
           <div id="mobile-menu" className="md:hidden mt-4 pt-4 border-t border-neutral-100">
             <nav className="flex flex-col gap-2" aria-label="תפריט נייד">
-              <Link href="/" className="px-4 py-3 text-neutral-900 font-semibold hover:bg-blue-50 rounded-lg transition-colors">
+              <Link href="/" onClick={(e) => handleNavClick(e, "/")} className="px-4 py-3 text-neutral-900 font-semibold hover:bg-blue-50 rounded-lg transition-colors">
                 בית
               </Link>
-              <Link href="/#how-it-works" className="px-4 py-3 text-neutral-600 hover:text-neutral-900 hover:bg-blue-50 rounded-lg transition-colors">
+              <Link href="/#how-it-works" onClick={(e) => handleNavClick(e, "/#how-it-works")} className="px-4 py-3 text-neutral-600 hover:text-neutral-900 hover:bg-blue-50 rounded-lg transition-colors">
                 איך זה עובד
               </Link>
-              <Link href="/#pricing" className="px-4 py-3 text-neutral-600 hover:text-neutral-900 hover:bg-blue-50 rounded-lg transition-colors">
+              <Link href="/#pricing" onClick={(e) => handleNavClick(e, "/#pricing")} className="px-4 py-3 text-neutral-600 hover:text-neutral-900 hover:bg-blue-50 rounded-lg transition-colors">
                 מחירים
               </Link>
-              <Link href="/#faq" className="px-4 py-3 text-neutral-600 hover:text-neutral-900 hover:bg-blue-50 rounded-lg transition-colors">
+              <Link href="/#faq" onClick={(e) => handleNavClick(e, "/#faq")} className="px-4 py-3 text-neutral-600 hover:text-neutral-900 hover:bg-blue-50 rounded-lg transition-colors">
                 שאלות נפוצות
               </Link>
               <div className="border-t border-neutral-100 mt-2 pt-2">
-                <Link href="/my-area" className="flex items-center gap-2 px-4 py-3 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors font-semibold">
+                <Link href="/my-area" onClick={(e) => handleNavClick(e, "/my-area")} className="flex items-center gap-2 px-4 py-3 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors font-semibold">
                   <FolderOpen className="w-5 h-5" />
                   <span>האזור שלי</span>
                 </Link>

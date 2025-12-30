@@ -96,15 +96,12 @@ function FAQItem({ question, answer }: { question: string; answer: string }) {
     <div className="border-b border-neutral-200 last:border-0">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full py-4 flex items-center justify-between text-right hover:bg-neutral-50 transition-colors"
+        className="w-full px-5 py-4 flex items-center justify-between text-right hover:bg-neutral-50 transition-colors gap-4"
       >
-        <span className="font-medium text-neutral-800">{question}</span>
-        <motion.div
-          animate={{ rotate: isOpen ? 180 : 0 }}
-          transition={{ duration: 0.2 }}
-        >
-          <ChevronDown className="w-5 h-5 text-neutral-400" />
-        </motion.div>
+        <ChevronDown 
+          className={`w-5 h-5 text-blue-500 flex-shrink-0 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
+        />
+        <span className="font-medium text-neutral-900 flex-1">{question}</span>
       </button>
       <AnimatePresence>
         {isOpen && (
@@ -115,7 +112,7 @@ function FAQItem({ question, answer }: { question: string; answer: string }) {
             transition={{ duration: 0.2 }}
             className="overflow-hidden"
           >
-            <p className="pb-4 text-neutral-600 leading-relaxed">{answer}</p>
+            <p className="px-5 pb-4 pr-14 text-neutral-700 leading-relaxed">{answer}</p>
           </motion.div>
         )}
       </AnimatePresence>
@@ -125,41 +122,53 @@ function FAQItem({ question, answer }: { question: string; answer: string }) {
 
 export default function FAQPage() {
   return (
-    <div className="min-h-screen bg-white flex flex-col">
+    <div className="min-h-screen bg-gradient-to-b from-neutral-50 to-white flex flex-col">
       <Header />
 
-      <main className="flex-1 max-w-3xl mx-auto px-6 py-12">
-        <div className="text-center mb-12">
-          <h1 className="text-3xl font-bold mb-4">שאלות נפוצות</h1>
-          <p className="text-neutral-600">
-            כל מה שצריך לדעת על תביעות קטנות והשירות שלנו
-          </p>
-        </div>
+      <main className="flex-1 py-16 md:py-24">
+        <div className="max-w-4xl mx-auto px-6">
+          {/* Header */}
+          <div className="text-center mb-16">
+            <span className="inline-block px-4 py-2 bg-blue-50 text-blue-600 rounded-full text-sm font-medium mb-4">
+              שאלות ותשובות
+            </span>
+            <h1 className="text-4xl md:text-5xl font-bold text-neutral-900 mb-4">
+              שאלות נפוצות
+            </h1>
+            <p className="text-lg text-neutral-600 max-w-2xl mx-auto">
+              כל מה שצריך לדעת על תביעות קטנות והשירות שלנו
+            </p>
+          </div>
 
-        <div className="space-y-8">
-          {faqs.map((category, idx) => (
-            <div key={idx}>
-              <h2 className="text-xl font-bold text-blue-600 mb-4 pb-2 border-b-2 border-blue-100">
-                {category.category}
-              </h2>
-              <div className="bg-white rounded-xl border border-neutral-200">
-                {category.questions.map((faq, faqIdx) => (
-                  <FAQItem key={faqIdx} question={faq.q} answer={faq.a} />
-                ))}
+          {/* FAQ Categories */}
+          <div className="space-y-10">
+            {faqs.map((category, idx) => (
+              <div key={idx} className="bg-white rounded-2xl shadow-sm border border-neutral-100 overflow-hidden">
+                <div className="bg-gradient-to-r from-blue-600 to-blue-500 px-6 py-4">
+                  <h2 className="text-lg font-bold text-white">
+                    {category.category}
+                  </h2>
+                </div>
+                <div className="divide-y divide-neutral-100">
+                  {category.questions.map((faq, faqIdx) => (
+                    <FAQItem key={faqIdx} question={faq.q} answer={faq.a} />
+                  ))}
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
 
-        <div className="mt-12 p-6 bg-gradient-to-br from-blue-50 to-emerald-50 rounded-2xl text-center">
-          <h3 className="font-bold text-lg mb-2">לא מצאת תשובה?</h3>
-          <p className="text-neutral-600 mb-4">אנחנו כאן לעזור!</p>
-          <a
-            href="mailto:support@tavati.co.il"
-            className="inline-flex items-center gap-2 px-6 py-3 bg-white border border-neutral-200 rounded-xl font-medium hover:bg-neutral-50 transition-colors"
-          >
-            📧 שלח לנו מייל
-          </a>
+          {/* Contact CTA */}
+          <div className="mt-16 p-8 bg-gradient-to-br from-blue-600 to-emerald-500 rounded-2xl text-center shadow-xl">
+            <h3 className="font-bold text-2xl text-white mb-3">לא מצאת תשובה?</h3>
+            <p className="text-blue-100 mb-6">אנחנו כאן לעזור בכל שאלה!</p>
+            <a
+              href="mailto:support@tavati.co.il"
+              className="inline-flex items-center gap-2 px-8 py-4 bg-white text-blue-600 rounded-xl font-bold hover:bg-blue-50 transition-colors shadow-lg"
+            >
+              📧 שלח לנו מייל
+            </a>
+          </div>
         </div>
       </main>
 
