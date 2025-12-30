@@ -72,8 +72,8 @@ export default function Header() {
             <Link href="/services" onClick={(e) => handleNavClick(e, "/services")} className="px-4 py-2 text-neutral-600 hover:text-neutral-900 hover:bg-blue-50 rounded-lg transition-colors">
               סוגי תביעות
             </Link>
-            <Link href="/#how-it-works" onClick={(e) => handleNavClick(e, "/#how-it-works")} className="px-4 py-2 text-neutral-600 hover:text-neutral-900 hover:bg-blue-50 rounded-lg transition-colors">
-              איך זה עובד
+            <Link href="/examples" onClick={(e) => handleNavClick(e, "/examples")} className="px-4 py-2 text-neutral-600 hover:text-neutral-900 hover:bg-blue-50 rounded-lg transition-colors">
+              דוגמאות
             </Link>
             <Link href="/blog" onClick={(e) => handleNavClick(e, "/blog")} className="px-4 py-2 text-neutral-600 hover:text-neutral-900 hover:bg-blue-50 rounded-lg transition-colors">
               מדריכים
@@ -126,8 +126,8 @@ export default function Header() {
               <Link href="/services" onClick={(e) => handleNavClick(e, "/services")} className="px-4 py-3 text-neutral-600 hover:text-neutral-900 hover:bg-blue-50 rounded-lg transition-colors">
                 סוגי תביעות
               </Link>
-              <Link href="/#how-it-works" onClick={(e) => handleNavClick(e, "/#how-it-works")} className="px-4 py-3 text-neutral-600 hover:text-neutral-900 hover:bg-blue-50 rounded-lg transition-colors">
-                איך זה עובד
+              <Link href="/examples" onClick={(e) => handleNavClick(e, "/examples")} className="px-4 py-3 text-neutral-600 hover:text-neutral-900 hover:bg-blue-50 rounded-lg transition-colors">
+                דוגמאות לכתבי תביעה
               </Link>
               <Link href="/blog" onClick={(e) => handleNavClick(e, "/blog")} className="px-4 py-3 text-neutral-600 hover:text-neutral-900 hover:bg-blue-50 rounded-lg transition-colors">
                 מדריכים

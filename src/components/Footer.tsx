@@ -36,7 +36,8 @@ export default function Footer() {
           <div>
             <h3 className="font-bold mb-4 text-white">מידע שימושי</h3>
             <nav className="flex flex-col gap-2 text-sm text-neutral-400" aria-label="מידע שימושי">
-              <Link href="/#how-it-works" className="hover:text-white transition-colors">איך זה עובד</Link>
+              <Link href="/examples" className="hover:text-white transition-colors">דוגמאות לכתבי תביעה</Link>
+              <Link href="/warning-letter" className="hover:text-white transition-colors">מכתב התראה</Link>
               <Link href="/blog" className="hover:text-white transition-colors">מדריכים וטיפים</Link>
               <Link href="/faq" className="hover:text-white transition-colors">שאלות נפוצות</Link>
               <Link href="/contact" className="hover:text-white transition-colors">צור קשר</Link>
