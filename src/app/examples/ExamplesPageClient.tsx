@@ -212,17 +212,17 @@ export default function ExamplesPageClient() {
                       <div className="grid md:grid-cols-2 gap-4 mb-6">
                         <div className="bg-white rounded-lg p-4 border">
                           <div className="text-sm text-gray-500 mb-1">התובע/ת</div>
-                          <div className="font-semibold">{example.preview.plaintiff}</div>
+                          <div className="font-semibold text-gray-900">{example.preview.plaintiff}</div>
                         </div>
                         <div className="bg-white rounded-lg p-4 border">
                           <div className="text-sm text-gray-500 mb-1">הנתבע/ת</div>
-                          <div className="font-semibold">{example.preview.defendant}</div>
+                          <div className="font-semibold text-gray-900">{example.preview.defendant}</div>
                         </div>
                       </div>
                       
                       <div className="mb-6">
                         <div className="text-sm text-gray-500 mb-2">עילת התביעה</div>
-                        <div className="bg-white rounded-lg p-4 border font-medium">
+                        <div className="bg-white rounded-lg p-4 border font-medium text-gray-900">
                           {example.preview.claimBasis}
                         </div>
                       </div>
@@ -233,7 +233,7 @@ export default function ExamplesPageClient() {
                           {example.preview.facts.map((fact, i) => (
                             <div key={i} className="flex gap-2 text-sm">
                               <span className="text-gray-400">{i + 1}.</span>
-                              <span>{fact}</span>
+                              <span className="text-gray-700">{fact}</span>
                             </div>
                           ))}
                         </div>
@@ -276,25 +276,25 @@ export default function ExamplesPageClient() {
           </div>
 
           {/* SEO Content */}
-          <div className="max-w-3xl mx-auto mt-16 prose prose-lg">
-            <h2>למה חשוב לראות דוגמה לכתב תביעה?</h2>
-            <p>
+          <div className="max-w-3xl mx-auto mt-16 prose prose-lg prose-gray">
+            <h2 className="text-gray-900">למה חשוב לראות דוגמה לכתב תביעה?</h2>
+            <p className="text-gray-700">
               הרבה אנשים שרוצים להגיש תביעה קטנה לבד לא יודעים איך נראה כתב תביעה מקצועי. 
               הדוגמאות בדף זה נועדו לתת לכם מושג על המבנה הנכון, אבל כל מקרה הוא ייחודי.
             </p>
             
-            <h3>מה חייב להיות בכתב תביעה?</h3>
-            <ul>
-              <li><strong>פרטי הצדדים</strong> - שם, כתובת ות.ז. של התובע והנתבע</li>
-              <li><strong>עילת התביעה</strong> - על מה תובעים (הפרת חוזה, נזיקין וכו')</li>
-              <li><strong>תיאור העובדות</strong> - מה קרה, מתי, ומה הנזק</li>
-              <li><strong>הסעדים</strong> - כמה כסף דורשים ועל מה</li>
-              <li><strong>רשימת מסמכים</strong> - אילו ראיות מצרפים</li>
-              <li><strong>הצהרה</strong> - שכל הפרטים נכונים</li>
+            <h3 className="text-gray-900">מה חייב להיות בכתב תביעה?</h3>
+            <ul className="text-gray-700">
+              <li><strong className="text-gray-900">פרטי הצדדים</strong> - שם, כתובת ות.ז. של התובע והנתבע</li>
+              <li><strong className="text-gray-900">עילת התביעה</strong> - על מה תובעים (הפרת חוזה, נזיקין וכו')</li>
+              <li><strong className="text-gray-900">תיאור העובדות</strong> - מה קרה, מתי, ומה הנזק</li>
+              <li><strong className="text-gray-900">הסעדים</strong> - כמה כסף דורשים ועל מה</li>
+              <li><strong className="text-gray-900">רשימת מסמכים</strong> - אילו ראיות מצרפים</li>
+              <li><strong className="text-gray-900">הצהרה</strong> - שכל הפרטים נכונים</li>
             </ul>
             
-            <h3>איך להגיש תביעה קטנה בעצמי?</h3>
-            <p>
+            <h3 className="text-gray-900">איך להגיש תביעה קטנה בעצמי?</h3>
+            <p className="text-gray-700">
               להגיש תביעה קטנה לבד זה פשוט יותר ממה שחושבים. הצעד הראשון הוא 
               להכין כתב תביעה מסודר. המערכת שלנו עוזרת לכם לעשות את זה - 
               פשוט ספרו מה קרה ואנחנו נכין את המסמך.

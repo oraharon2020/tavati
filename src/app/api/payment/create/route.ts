@@ -89,12 +89,44 @@ export async function POST(req: NextRequest) {
 
     // Check for success (status can be 1 or "1")
     if (result.status === 1 || result.status === "1") {
-      // Success - return payment URL
+      const processId = result.data?.processId;
+      const processToken = result.data?.processToken;
+      
+      // Get the actual payment page URL using getPaymentProcessInfo
+      const infoFormData = new FormData();
+      infoFormData.append("pageCode", MESHULAM_PAGE_CODE);
+      infoFormData.append("userId", MESHULAM_USER_ID);
+      infoFormData.append("processId", processId.toString());
+      infoFormData.append("processToken", processToken);
+      
+      const infoResponse = await fetch(`${MESHULAM_API_URL}/getPaymentProcessInfo`, {
+        method: "POST",
+        body: infoFormData,
+      });
+      
+      const infoResult = await infoResponse.json();
+      console.log("Payment info response:", JSON.stringify(infoResult, null, 2));
+      
+      // Build payment URL - try to get from API response, otherwise build it
+      const isSandbox = MESHULAM_API_URL.includes("sandbox");
+      const basePaymentUrl = isSandbox 
+        ? "https://sandbox.meshulam.co.il" 
+        : "https://secure.meshulam.co.il";
+      
+      // The payment URL format for Meshulam
+      const paymentUrl = infoResult.data?.url || 
+        result.data?.url || 
+        `${basePaymentUrl}/s/${MESHULAM_PAGE_CODE}/${processId}`;
+      
+      console.log("Final Payment URL:", paymentUrl);
+      
+      // Success - return payment data including authCode for SDK
       return NextResponse.json({
         success: true,
-        paymentUrl: result.data?.url,
-        processId: result.data?.processId,
-        processToken: result.data?.processToken,
+        paymentUrl,
+        processId,
+        processToken,
+        authCode: result.data?.authCode,
       });
     } else {
       console.error("Grow API error:", result);

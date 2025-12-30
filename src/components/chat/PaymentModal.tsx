@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { CreditCard, CheckCircle2, Shield, Loader2, Tag } from "lucide-react";
 import { AppliedCoupon } from "./types";
@@ -8,7 +9,8 @@ import { BASE_PRICE } from "./constants";
 interface PaymentModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onPayment: () => void;
+  onPayment: () => Promise<string | null>;
+  onPaymentSuccess: () => void;
   isProcessing: boolean;
   agreedToTerms: boolean;
   setAgreedToTerms: (value: boolean) => void;
@@ -26,6 +28,7 @@ export default function PaymentModal({
   isOpen,
   onClose,
   onPayment,
+  onPaymentSuccess,
   isProcessing,
   agreedToTerms,
   setAgreedToTerms,
@@ -38,6 +41,58 @@ export default function PaymentModal({
   onRemoveCoupon,
   calculateFinalPrice,
 }: PaymentModalProps) {
+  const [paymentLoading, setPaymentLoading] = useState(false);
+
+  const handlePaymentClick = async () => {
+    setPaymentLoading(true);
+    const result = await onPayment();
+    setPaymentLoading(false);
+    
+    if (result) {
+      try {
+        let processInfo;
+        try {
+          processInfo = typeof result === 'string' ? JSON.parse(result) : result;
+        } catch {
+          processInfo = { paymentUrl: result };
+        }
+        
+        const { authCode, paymentUrl } = processInfo;
+        
+        // Try to use Meshulam SDK if available and authCode exists
+        if (authCode && typeof window !== 'undefined' && window.growPayment && window.meshulam_sdk_ready) {
+          // Listen for success event BEFORE opening wallet
+          const handleSuccess = (e: Event) => {
+            console.log('Payment success event received:', (e as CustomEvent).detail);
+            window.removeEventListener('meshulam-success', handleSuccess);
+            onPaymentSuccess();
+            // Don't call onClose() - let onPaymentSuccess handle navigation
+          };
+          window.addEventListener('meshulam-success', handleSuccess);
+          
+          console.log('Opening Meshulam wallet with authCode:', authCode);
+          // Open the payment wallet
+          window.growPayment.renderPaymentOptions(authCode);
+        } else if (paymentUrl) {
+          // Fallback: open payment URL in new window
+          // Note: In this case we can't know when payment succeeded
+          // The webhook will update the DB but user needs to refresh
+          window.open(paymentUrl, '_blank');
+          onClose();
+        }
+      } catch (err) {
+        console.error('Payment error:', err);
+      }
+    }
+  };
+
+  const handleClose = () => {
+    if (typeof window !== 'undefined' && window.growPayment) {
+      window.growPayment.close();
+    }
+    onClose();
+  };
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -46,13 +101,13 @@ export default function PaymentModal({
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
-          onClick={() => !isProcessing && onClose()}
+          onClick={() => !isProcessing && handleClose()}
         >
           <motion.div
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.9, opacity: 0 }}
-            className="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl"
+            className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
@@ -161,11 +216,11 @@ export default function PaymentModal({
 
             {/* Payment Button */}
             <button
-              onClick={onPayment}
-              disabled={isProcessing || !agreedToTerms}
+              onClick={handlePaymentClick}
+              disabled={isProcessing || paymentLoading || !agreedToTerms}
               className="w-full py-3 bg-gradient-to-r from-blue-600 to-emerald-500 text-white rounded-xl font-semibold hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
-              {isProcessing ? (
+              {(isProcessing || paymentLoading) ? (
                 <>
                   <Loader2 className="w-5 h-5 animate-spin" />
                   מעבד תשלום...
@@ -181,7 +236,7 @@ export default function PaymentModal({
             {/* Cancel */}
             {!isProcessing && (
               <button
-                onClick={onClose}
+                onClick={handleClose}
                 className="w-full mt-3 py-2 text-neutral-500 hover:text-neutral-700 text-sm"
               >
                 ביטול

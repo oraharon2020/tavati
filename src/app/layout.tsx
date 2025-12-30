@@ -158,6 +158,54 @@ export default function RootLayout({
           href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700&display=swap"
           rel="stylesheet"
         />
+        {/* Meshulam Payment SDK */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function () {
+                var s = document.createElement('script');
+                s.type = 'text/javascript';
+                s.async = true;
+                s.src = 'https://cdn.meshulam.co.il/sdk/gs.min.js';
+                s.onload = function() {
+                  console.log('Meshulam SDK loaded');
+                  if (window.growPayment) {
+                    window.growPayment.init({
+                      environment: "DEV",
+                      version: 1,
+                      events: {
+                        onSuccess: function(response) {
+                          console.log('Meshulam onSuccess:', response);
+                          window.dispatchEvent(new CustomEvent('meshulam-success', { detail: response }));
+                        },
+                        onFailure: function(response) {
+                          console.log('Meshulam onFailure:', response);
+                          window.dispatchEvent(new CustomEvent('meshulam-failure', { detail: response }));
+                        },
+                        onError: function(response) {
+                          console.log('Meshulam onError:', response);
+                          window.dispatchEvent(new CustomEvent('meshulam-error', { detail: response }));
+                        },
+                        onWalletChange: function(state) {
+                          console.log('Meshulam onWalletChange:', state);
+                          window.dispatchEvent(new CustomEvent('meshulam-wallet-change', { detail: state }));
+                        },
+                        onClose: function() {
+                          console.log('Meshulam wallet closed');
+                          window.dispatchEvent(new CustomEvent('meshulam-close'));
+                        }
+                      }
+                    });
+                    window.meshulam_sdk_ready = true;
+                    console.log('Meshulam SDK ready');
+                  }
+                };
+                var x = document.getElementsByTagName('script')[0];
+                x.parentNode.insertBefore(s, x);
+              })();
+            `
+          }}
+        />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
