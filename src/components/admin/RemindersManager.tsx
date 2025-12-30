@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { MessageSquare, Send, Clock, CheckCircle, XCircle, RefreshCw, Bell } from "lucide-react";
+import { MessageSquare, Send, Clock, CheckCircle, XCircle, RefreshCw, Bell, RotateCcw } from "lucide-react";
 
 interface ReminderLog {
   id: string;
@@ -12,6 +12,7 @@ interface ReminderLog {
     sent?: number;
     failed?: number;
     errors?: string[];
+    isSecondReminder?: boolean;
   };
   created_at: string;
 }
@@ -22,9 +23,11 @@ interface RemindersManagerProps {
 
 export default function RemindersManager({ onRefresh }: RemindersManagerProps) {
   const [pendingReminders, setPendingReminders] = useState(0);
+  const [pendingSecondReminders, setPendingSecondReminders] = useState(0);
   const [recentLogs, setRecentLogs] = useState<ReminderLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
+  const [sendingSecond, setSendingSecond] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   const fetchData = async () => {
@@ -34,6 +37,7 @@ export default function RemindersManager({ onRefresh }: RemindersManagerProps) {
       if (res.ok) {
         const data = await res.json();
         setPendingReminders(data.pendingReminders || 0);
+        setPendingSecondReminders(data.pendingSecondReminders || 0);
         setRecentLogs(data.recentLogs || []);
       }
     } catch (error) {
@@ -47,22 +51,31 @@ export default function RemindersManager({ onRefresh }: RemindersManagerProps) {
     fetchData();
   }, []);
 
-  const handleSendReminders = async () => {
-    if (!confirm(`לשלוח תזכורות ל-${pendingReminders} משתמשים?`)) return;
+  const handleSendReminders = async (isSecondReminder = false) => {
+    const count = isSecondReminder ? pendingSecondReminders : pendingReminders;
+    const reminderType = isSecondReminder ? "תזכורות שניות" : "תזכורות ראשונות";
     
-    setSending(true);
+    if (!confirm(`לשלוח ${reminderType} ל-${count} משתמשים?`)) return;
+    
+    if (isSecondReminder) {
+      setSendingSecond(true);
+    } else {
+      setSending(true);
+    }
     setMessage(null);
     
     try {
       const res = await fetch("/api/admin/reminders", {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sendSecondReminder: isSecondReminder }),
       });
       const data = await res.json();
       
       if (res.ok) {
         setMessage({
           type: "success",
-          text: `נשלחו ${data.sent} תזכורות בהצלחה${data.failed > 0 ? `, ${data.failed} נכשלו` : ""}`,
+          text: `נשלחו ${data.sent} ${reminderType} בהצלחה${data.failed > 0 ? `, ${data.failed} נכשלו` : ""}`,
         });
         fetchData();
         onRefresh?.();
@@ -73,6 +86,7 @@ export default function RemindersManager({ onRefresh }: RemindersManagerProps) {
       setMessage({ type: "error", text: "שגיאה בשליחת תזכורות" });
     } finally {
       setSending(false);
+      setSendingSecond(false);
     }
   };
 
@@ -89,7 +103,9 @@ export default function RemindersManager({ onRefresh }: RemindersManagerProps) {
   const getTypeLabel = (type: string) => {
     switch (type) {
       case "incomplete_claim":
-        return "תביעות לא גמורות";
+        return "תזכורת ראשונה";
+      case "second_reminder":
+        return "תזכורת שנייה";
       case "payment_reminder":
         return "תזכורת תשלום";
       default:
@@ -120,14 +136,22 @@ export default function RemindersManager({ onRefresh }: RemindersManagerProps) {
           </button>
         </div>
 
-        <div className="mt-6 grid grid-cols-2 gap-4">
+        <div className="mt-6 grid grid-cols-3 gap-4">
           <div className="bg-blue-50 rounded-lg p-4">
             <div className="flex items-center gap-2 text-blue-600 text-sm mb-1">
               <Clock className="w-4 h-4" />
-              ממתינים לתזכורת
+              תזכורת ראשונה
             </div>
             <div className="text-3xl font-bold text-blue-700">{pendingReminders}</div>
-            <p className="text-xs text-blue-500 mt-1">משתמשים שהתחילו תביעה לפני 24+ שעות</p>
+            <p className="text-xs text-blue-500 mt-1">24+ שעות, לא קיבלו תזכורת</p>
+          </div>
+          <div className="bg-amber-50 rounded-lg p-4">
+            <div className="flex items-center gap-2 text-amber-600 text-sm mb-1">
+              <RotateCcw className="w-4 h-4" />
+              תזכורת שנייה
+            </div>
+            <div className="text-3xl font-bold text-amber-700">{pendingSecondReminders}</div>
+            <p className="text-xs text-amber-500 mt-1">72+ שעות, קיבלו תזכורת אחת</p>
           </div>
           <div className="bg-green-50 rounded-lg p-4">
             <div className="flex items-center gap-2 text-green-600 text-sm mb-1">
@@ -140,15 +164,15 @@ export default function RemindersManager({ onRefresh }: RemindersManagerProps) {
                   new Date(log.created_at).toDateString() === new Date().toDateString()
               ).reduce((sum, log) => sum + log.sent_count, 0)}
             </div>
-            <p className="text-xs text-green-500 mt-1">תזכורות שנשלחו היום</p>
+            <p className="text-xs text-green-500 mt-1">סה"כ תזכורות היום</p>
           </div>
         </div>
 
-        {/* Send Button */}
-        <div className="mt-6 flex items-center gap-4">
+        {/* Send Buttons */}
+        <div className="mt-6 flex flex-wrap items-center gap-3">
           <button
-            onClick={handleSendReminders}
-            disabled={sending || pendingReminders === 0}
+            onClick={() => handleSendReminders(false)}
+            disabled={sending || sendingSecond || pendingReminders === 0}
             className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {sending ? (
@@ -159,28 +183,46 @@ export default function RemindersManager({ onRefresh }: RemindersManagerProps) {
             ) : (
               <>
                 <Send className="w-4 h-4" />
-                שלח תזכורות עכשיו
+                שלח תזכורות ראשונות ({pendingReminders})
               </>
             )}
           </button>
-          {message && (
-            <p
-              className={`text-sm ${
-                message.type === "success" ? "text-green-600" : "text-red-600"
-              }`}
-            >
-              {message.text}
-            </p>
-          )}
+          <button
+            onClick={() => handleSendReminders(true)}
+            disabled={sending || sendingSecond || pendingSecondReminders === 0}
+            className="flex items-center gap-2 px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            {sendingSecond ? (
+              <>
+                <RefreshCw className="w-4 h-4 animate-spin" />
+                שולח...
+              </>
+            ) : (
+              <>
+                <RotateCcw className="w-4 h-4" />
+                שלח תזכורות שניות ({pendingSecondReminders})
+              </>
+            )}
+          </button>
         </div>
+        
+        {message && (
+          <p
+            className={`mt-3 text-sm ${
+              message.type === "success" ? "text-green-600" : "text-red-600"
+            }`}
+          >
+            {message.text}
+          </p>
+        )}
 
         {/* Cron Info */}
         <div className="mt-4 p-3 bg-neutral-50 rounded-lg text-sm text-neutral-600">
           <p className="font-medium">⏰ תזכורות אוטומטיות</p>
           <p className="mt-1">
-            המערכת שולחת תזכורות אוטומטיות כל יום בשעה 07:00 (מוגדר ב-Vercel Cron).
+            המערכת שולחת תזכורות ראשונות אוטומטית כל יום בשעה 10:00 (שעון ישראל).
             <br />
-            התזכורות נשלחות רק למשתמשים שהתחילו תביעה לפני 24 שעות ולא סיימו.
+            תזכורות שניות נשלחות ידנית מכאן - לפי בחירתך.
           </p>
         </div>
       </div>

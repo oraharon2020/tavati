@@ -19,16 +19,28 @@ export async function GET() {
   try {
     const supabase = getSupabaseClient();
 
-    // Get incomplete sessions from 24+ hours ago that haven't been reminded
+    // Get incomplete sessions from 24+ hours ago that haven't been reminded (first reminder)
     const oneDayAgo = new Date();
     oneDayAgo.setDate(oneDayAgo.getDate() - 1);
 
-    const { count: pendingReminders } = await supabase
+    const { count: pendingFirstReminders } = await supabase
       .from("chat_sessions")
       .select("*", { count: "exact", head: true })
       .eq("status", "in_progress")
-      .is("reminder_sent", null)
+      .or("reminder_sent.is.null,reminder_count.eq.0")
       .lt("created_at", oneDayAgo.toISOString())
+      .not("phone", "is", null);
+
+    // Get sessions eligible for second reminder (72+ hours, already had 1 reminder)
+    const threeDaysAgo = new Date();
+    threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+
+    const { count: pendingSecondReminders } = await supabase
+      .from("chat_sessions")
+      .select("*", { count: "exact", head: true })
+      .eq("status", "in_progress")
+      .eq("reminder_count", 1)
+      .lt("created_at", threeDaysAgo.toISOString())
       .not("phone", "is", null);
 
     // Get recent reminder logs
@@ -39,7 +51,8 @@ export async function GET() {
       .limit(20);
 
     return NextResponse.json({
-      pendingReminders: pendingReminders || 0,
+      pendingReminders: pendingFirstReminders || 0,
+      pendingSecondReminders: pendingSecondReminders || 0,
       recentLogs: recentLogs || [],
     });
   } catch (error) {
@@ -49,13 +62,17 @@ export async function GET() {
 }
 
 // POST - Manually trigger reminders
-export async function POST() {
+export async function POST(request: NextRequest) {
   const isAuth = await isAdminAuthenticated();
   if (!isAuth) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   try {
+    const body = await request.json().catch(() => ({}));
+    const sendSecondReminder = body.sendSecondReminder === true;
+    const maxReminders = sendSecondReminder ? 2 : 1;
+
     const supabase = getSupabaseClient();
 
     // Get opt-out list first
@@ -65,18 +82,28 @@ export async function POST() {
     
     const optOutPhones = new Set((optOutList || []).map(o => normalizePhone(o.phone)));
 
-    // Get incomplete sessions from 24+ hours ago
-    const oneDayAgo = new Date();
-    oneDayAgo.setDate(oneDayAgo.getDate() - 1);
+    // Get incomplete sessions from 24+ hours ago (or 72+ hours for second reminder)
+    const hoursAgo = sendSecondReminder ? 72 : 24;
+    const targetDate = new Date();
+    targetDate.setHours(targetDate.getHours() - hoursAgo);
 
-    const { data: incompleteSessions, error } = await supabase
+    let query = supabase
       .from("chat_sessions")
       .select("id, phone, created_at, claim_data, reminder_sent, reminder_count")
       .eq("status", "in_progress")
-      .is("reminder_sent", null)
-      .lt("created_at", oneDayAgo.toISOString())
+      .lt("created_at", targetDate.toISOString())
       .not("phone", "is", null)
       .limit(50);
+
+    // For first reminder: no reminder sent yet
+    // For second reminder: exactly 1 reminder sent
+    if (sendSecondReminder) {
+      query = query.eq("reminder_count", 1);
+    } else {
+      query = query.or("reminder_sent.is.null,reminder_count.eq.0");
+    }
+
+    const { data: incompleteSessions, error } = await query;
 
     if (error) throw error;
 
@@ -106,13 +133,15 @@ export async function POST() {
           continue;
         }
 
-        // Check if already sent reminder (max 1 per user)
-        if (session.reminder_count && session.reminder_count >= 1) {
+        // Check if already reached max reminders
+        const currentCount = session.reminder_count || 0;
+        if (currentCount >= maxReminders) {
           results.skipped++;
           continue;
         }
 
-        const message = generateReminderMessage(session.claim_data);
+        const isSecondReminder = currentCount === 1;
+        const message = generateReminderMessage(session.id, session.claim_data, isSecondReminder);
         const smsSent = await sendSMS(session.phone, message);
         
         if (smsSent) {
@@ -120,7 +149,7 @@ export async function POST() {
             .from("chat_sessions")
             .update({ 
               reminder_sent: new Date().toISOString(),
-              reminder_count: 1
+              reminder_count: currentCount + 1
             })
             .eq("id", session.id);
           
@@ -136,10 +165,10 @@ export async function POST() {
 
     // Log results
     await supabase.from("reminder_logs").insert({
-      type: "incomplete_claim",
+      type: sendSecondReminder ? "second_reminder" : "incomplete_claim",
       sent_count: results.sent,
       failed_count: results.failed,
-      details: { ...results, skipped_opt_out: results.skipped },
+      details: { ...results, skipped_opt_out: results.skipped, isSecondReminder: sendSecondReminder },
     });
 
     return NextResponse.json({ 
@@ -163,15 +192,23 @@ function normalizePhone(phone: string): string {
   return clean;
 }
 
-function generateReminderMessage(claimData?: { topic?: string }): string {
+function generateReminderMessage(sessionId: string, claimData?: { topic?: string }, isSecondReminder = false): string {
   const topicText = claimData?.topic ? ` בנושא "${claimData.topic}"` : "";
+  const directLink = `tavati.co.il/chat?session=${sessionId}`;
   
-  const messages = [
-    `היי! 👋 התחלת תביעה${topicText} באתר תבעתי אבל לא סיימת. רוצים לעזור לך להשלים? tavati.co.il/my-area`,
-    `שלום! ראינו שהתחלת תביעה${topicText} ב-תבעתי. חבל לוותר! המשיכו: tavati.co.il/my-area`,
-    `תזכורת: יש לך תביעה${topicText} שמחכה לך ב-תבעתי. עוד כמה דקות והיא מוכנה! tavati.co.il/my-area`,
+  const firstReminderMessages = [
+    `היי! 👋 התחלת תביעה${topicText} באתר תבעתי אבל לא סיימת. רוצים לעזור לך להשלים? המשך: ${directLink}`,
+    `שלום! ראינו שהתחלת תביעה${topicText} ב-תבעתי. חבל לוותר! המשיכו: ${directLink}`,
+    `תזכורת: יש לך תביעה${topicText} שמחכה לך ב-תבעתי. עוד כמה דקות והיא מוכנה! ${directLink}`,
+  ];
+
+  const secondReminderMessages = [
+    `היי! 👋 עוד לא סיימת את התביעה${topicText}. אנחנו פה אם צריך עזרה! המשך: ${directLink}`,
+    `תזכורת אחרונה: התביעה שלך${topicText} עדיין מחכה. סיים עכשיו: ${directLink}`,
+    `לא לשכוח! יש לך תביעה${topicText} באמצע. כמה דקות וסיימת: ${directLink}`,
   ];
   
+  const messages = isSecondReminder ? secondReminderMessages : firstReminderMessages;
   const baseMessage = messages[Math.floor(Math.random() * messages.length)];
   
   // חובה להוסיף אופציית הסרה לפי חוק הספאם

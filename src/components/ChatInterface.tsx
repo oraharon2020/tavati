@@ -1,43 +1,20 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
-import { Send, Loader2, Scale, RotateCcw, FileText, Download, CheckCircle2, MapPin, CreditCard, FileCheck, ArrowLeft, Paperclip, Upload, X, MessageSquare, Plus, Image, File, Trash2, Eye, Shield, Tag, Home } from "lucide-react";
+import { Send, Loader2, Scale, RotateCcw, FileText, Download, CheckCircle2, MapPin, CreditCard, FileCheck, ArrowLeft, Paperclip, Upload, X, MessageSquare, Plus, Image, File, Trash2, Eye, Shield, Tag, Home, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { INITIAL_MESSAGE } from "@/lib/prompts";
 import { motion, AnimatePresence } from "framer-motion";
 import { generateClaimPDF, type ClaimData } from "@/lib/pdfGenerator";
 import { findCourtByCity, calculateFee, COURTS } from "@/lib/types";
-
-interface Message {
-  id: string;
-  role: "user" | "assistant";
-  content: string;
-  image?: {
-    url: string; // base64 data URL
-    name: string;
-  };
-  attachment?: {
-    type: "file" | "whatsapp";
-    name: string;
-    url?: string;
-  };
-}
+import { PaymentModal, PreviewModal, ChatHeader, STEPS, BASE_PRICE } from "./chat";
+import type { Message, Attachment, UploadedFile, AppliedCoupon } from "./chat";
 
 interface ChatInterfaceProps {
   sessionId?: string | null;
   phone?: string | null;
 }
-
-const STEPS = [
-  { id: 1, name: "הסיפור", icon: "📝" },
-  { id: 2, name: "הנתבע", icon: "👤" },
-  { id: 3, name: "הסכום", icon: "💰" },
-  { id: 4, name: "ראיות", icon: "📎" },
-  { id: 5, name: "פרטים", icon: "📋" },
-  { id: 6, name: "הצהרות", icon: "✍️" },
-  { id: 7, name: "סיכום", icon: "✅" },
-];
 
 export default function ChatInterface({ sessionId, phone }: ChatInterfaceProps = {}) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -73,10 +50,11 @@ export default function ChatInterface({ sessionId, phone }: ChatInterfaceProps =
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [claimData, setClaimData] = useState<ClaimData | null>(null);
-  const [uploadedFiles, setUploadedFiles] = useState<Array<{ name: string; url?: string; type: string }>>([]);
+  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [showAttachmentsScreen, setShowAttachmentsScreen] = useState(false);
-  const [attachments, setAttachments] = useState<Array<{ name: string; url?: string; type: string; preview?: string }>>([]);
+  const [attachments, setAttachments] = useState<Attachment[]>([]);
+  const [showMobileSteps, setShowMobileSteps] = useState(false);
 
   // Create new session when starting fresh chat
   const createNewSession = async () => {
@@ -510,13 +488,12 @@ ${data.content.slice(0, 8000)}${data.content.length > 8000 ? "\n...(קוצר)" :
 
   // חישוב מחיר סופי
   const calculateFinalPrice = () => {
-    const basePrice = 79;
-    if (!appliedCoupon) return basePrice;
+    if (!appliedCoupon) return BASE_PRICE;
     
     if (appliedCoupon.discount_type === "percentage") {
-      return Math.round(basePrice * (1 - appliedCoupon.discount_value / 100));
+      return Math.round(BASE_PRICE * (1 - appliedCoupon.discount_value / 100));
     } else {
-      return Math.max(0, basePrice - appliedCoupon.discount_value);
+      return Math.max(0, BASE_PRICE - appliedCoupon.discount_value);
     }
   };
 
@@ -1090,439 +1067,198 @@ ${data.content.slice(0, 8000)}${data.content.length > 8000 ? "\n...(קוצר)" :
   return (
     <div className="flex flex-col h-screen bg-gray-50">
       {/* Header */}
-      <header className="sticky top-0 z-10 bg-white/95 backdrop-blur-sm border-b border-gray-200 px-4 py-3 shadow-sm">
-        <div className="max-w-3xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Link
-              href="/"
-              className="p-2 rounded-lg hover:bg-neutral-100 transition-colors"
-              title="חזרה לדף הבית"
-            >
-              <Home className="w-5 h-5 text-neutral-500" />
+      <header className="sticky top-0 z-10 bg-white/95 backdrop-blur-sm border-b border-gray-200 shadow-sm">
+        {/* Mobile: Clean single row */}
+        <div className="sm:hidden px-3 py-2.5">
+          <div className="grid grid-cols-3 items-center">
+            {/* Left: Logo + Name */}
+            <Link href="/" className="flex items-center gap-2 justify-self-start">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600 to-emerald-500 flex items-center justify-center">
+                <Scale className="w-4 h-4 text-white" />
+              </div>
+              <span className="font-bold text-gray-900">תבעתי</span>
             </Link>
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-emerald-500 flex items-center justify-center shadow-lg shadow-blue-500/20">
-              <Scale className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <h1 className="font-bold text-lg text-gray-900">תבעתי</h1>
-              <p className="text-xs text-gray-500">מערכת הגשת תביעות</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
+
+            {/* Center: Progress indicator - clickable */}
+            <button
+              onClick={() => setShowMobileSteps(!showMobileSteps)}
+              className="flex items-center justify-center gap-1.5 text-sm bg-neutral-50 hover:bg-neutral-100 rounded-full px-3 py-1.5 transition-colors"
+            >
+              <span className="font-semibold text-neutral-800">{STEPS[currentStep - 1]?.name}</span>
+              <span className="text-neutral-500 font-medium">{currentStep}/{STEPS.length}</span>
+              <ChevronDown className={cn("w-3.5 h-3.5 text-neutral-400 transition-transform", showMobileSteps && "rotate-180")} />
+            </button>
+
+            {/* Right: Reset */}
             <button
               onClick={resetChat}
-              className="p-2.5 rounded-lg hover:bg-[var(--secondary)] transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              className="p-2 rounded-lg hover:bg-neutral-100 transition-colors justify-self-end"
               title="התחל מחדש"
               aria-label="התחל שיחה חדשה"
             >
-              <RotateCcw className="w-5 h-5 text-[var(--muted)]" aria-hidden="true" />
+              <RotateCcw className="w-4 h-4 text-neutral-400" aria-hidden="true" />
             </button>
           </div>
+
+          {/* Mobile Steps Dropdown */}
+          <AnimatePresence>
+            {showMobileSteps && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: "auto", opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="overflow-hidden"
+              >
+                <div className="mt-3 bg-neutral-50 rounded-xl p-3 space-y-2">
+                  {STEPS.map((step) => (
+                    <div
+                      key={step.id}
+                      className={cn(
+                        "flex items-center gap-3 p-2 rounded-lg transition-colors",
+                        currentStep === step.id && "bg-white shadow-sm",
+                        currentStep > step.id && "opacity-60"
+                      )}
+                    >
+                      <div className={cn(
+                        "w-7 h-7 rounded-full flex items-center justify-center text-sm flex-shrink-0",
+                        currentStep > step.id
+                          ? "bg-emerald-500 text-white"
+                          : currentStep === step.id
+                          ? "bg-blue-500 text-white"
+                          : "bg-neutral-200 text-neutral-500"
+                      )}>
+                        {currentStep > step.id ? "✓" : step.icon}
+                      </div>
+                      <span className={cn(
+                        "font-medium text-sm",
+                        currentStep === step.id ? "text-blue-600" : 
+                        currentStep > step.id ? "text-emerald-600" : "text-neutral-500"
+                      )}>
+                        {step.name}
+                      </span>
+                      {currentStep === step.id && (
+                        <span className="mr-auto text-xs bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full">
+                          כאן אתה
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
 
-        {/* Steps Progress - Friendly Design */}
-        <div className="max-w-3xl mx-auto mt-4 px-2">
-          {/* Progress Bar */}
-          <div className="relative h-2 bg-neutral-100 rounded-full overflow-hidden mb-3">
-            <motion.div
-              className="absolute top-0 left-0 h-full bg-gradient-to-r from-blue-500 to-emerald-500 rounded-full"
-              initial={{ width: 0 }}
-              animate={{ width: `${((currentStep - 1) / (STEPS.length - 1)) * 100}%` }}
-              transition={{ duration: 0.5, ease: "easeOut" }}
-            />
-          </div>
-          
-          {/* Step Labels */}
-          <div className="flex items-center justify-between">
-            {STEPS.map((step, index) => (
-              <div key={step.id} className="flex flex-col items-center">
-                <motion.div
-                  className={cn(
-                    "w-9 h-9 rounded-full flex items-center justify-center text-base transition-all shadow-sm",
-                    currentStep > step.id
-                      ? "bg-emerald-500 text-white shadow-emerald-200"
-                      : currentStep === step.id
-                      ? "bg-blue-500 text-white shadow-blue-200 ring-4 ring-blue-100"
-                      : "bg-white text-neutral-400 border-2 border-neutral-200"
-                  )}
-                  initial={false}
-                  animate={{
-                    scale: currentStep === step.id ? 1.1 : 1,
-                  }}
-                  transition={{ duration: 0.2 }}
-                >
-                  {currentStep > step.id ? "✓" : step.icon}
-                </motion.div>
-                <span className={cn(
-                  "text-[10px] mt-1.5 font-medium hidden sm:block transition-colors",
-                  currentStep === step.id ? "text-blue-600" : 
-                  currentStep > step.id ? "text-emerald-600" : "text-neutral-400"
-                )}>
-                  {step.name}
-                </span>
+        {/* Desktop: Full header */}
+        <div className="hidden sm:block px-4 py-3">
+          <div className="max-w-3xl mx-auto flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Link
+                href="/"
+                className="p-2 rounded-lg hover:bg-neutral-100 transition-colors"
+                title="חזרה לדף הבית"
+              >
+                <Home className="w-5 h-5 text-neutral-500" />
+              </Link>
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-emerald-500 flex items-center justify-center shadow-lg shadow-blue-500/20">
+                <Scale className="w-5 h-5 text-white" />
               </div>
-            ))}
+              <div>
+                <h1 className="font-bold text-lg text-gray-900">תבעתי</h1>
+                <p className="text-xs text-gray-500">מערכת הגשת תביעות</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={resetChat}
+                className="p-2.5 rounded-lg hover:bg-[var(--secondary)] transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                title="התחל מחדש"
+                aria-label="התחל שיחה חדשה"
+              >
+                <RotateCcw className="w-5 h-5 text-[var(--muted)]" aria-hidden="true" />
+              </button>
+            </div>
           </div>
-          
-          {/* Current Step Indicator - Mobile */}
-          <div className="sm:hidden text-center mt-2">
-            <span className="text-sm font-medium text-blue-600">
-              שלב {currentStep} מתוך {STEPS.length}: {STEPS[currentStep - 1]?.name}
-            </span>
+
+          {/* Desktop: Steps Progress */}
+          <div className="max-w-3xl mx-auto mt-3 px-2">
+            {/* Progress Bar */}
+            <div className="relative h-2 bg-neutral-100 rounded-full overflow-hidden mb-3">
+              <motion.div
+                className="absolute top-0 left-0 h-full bg-gradient-to-r from-blue-500 to-emerald-500 rounded-full"
+                initial={{ width: 0 }}
+                animate={{ width: `${((currentStep - 1) / (STEPS.length - 1)) * 100}%` }}
+                transition={{ duration: 0.5, ease: "easeOut" }}
+              />
+            </div>
+            
+            {/* Step Labels */}
+            <div className="flex items-center justify-between">
+              {STEPS.map((step, index) => (
+                <div key={step.id} className="flex flex-col items-center">
+                  <motion.div
+                    className={cn(
+                      "w-9 h-9 rounded-full flex items-center justify-center text-base transition-all shadow-sm",
+                      currentStep > step.id
+                        ? "bg-emerald-500 text-white shadow-emerald-200"
+                        : currentStep === step.id
+                        ? "bg-blue-500 text-white shadow-blue-200 ring-4 ring-blue-100"
+                        : "bg-white text-neutral-400 border-2 border-neutral-200"
+                    )}
+                    initial={false}
+                    animate={{
+                      scale: currentStep === step.id ? 1.1 : 1,
+                    }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    {currentStep > step.id ? "✓" : step.icon}
+                  </motion.div>
+                  <span className={cn(
+                    "text-[10px] mt-1.5 font-medium transition-colors",
+                    currentStep === step.id ? "text-blue-600" : 
+                    currentStep > step.id ? "text-emerald-600" : "text-neutral-400"
+                  )}>
+                    {step.name}
+                  </span>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </header>
 
       {/* Payment Modal */}
-      <AnimatePresence>
-        {showPaymentModal && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
-            onClick={() => !isProcessingPayment && setShowPaymentModal(false)}
-          >
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl"
-              onClick={(e) => e.stopPropagation()}
-            >
-              {/* Header */}
-              <div className="text-center mb-6">
-                <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-blue-500 to-emerald-500 rounded-2xl flex items-center justify-center">
-                  <CreditCard className="w-8 h-8 text-white" />
-                </div>
-                <h2 className="text-xl font-bold text-neutral-900">השלמת התשלום</h2>
-                <p className="text-neutral-500 mt-1">הורדת כתב התביעה המוכן</p>
-              </div>
-
-              {/* Price */}
-              <div className="bg-gradient-to-br from-blue-50 to-emerald-50 rounded-xl p-4 mb-4 text-center border border-blue-100">
-                {appliedCoupon ? (
-                  <>
-                    <div className="text-lg text-neutral-400 line-through">₪79</div>
-                    <div className="text-3xl font-bold text-emerald-600">₪{calculateFinalPrice()}</div>
-                    <div className="text-sm text-emerald-600 flex items-center justify-center gap-1 mt-1">
-                      <Tag className="w-3 h-3" />
-                      {appliedCoupon.discount_type === "percentage" 
-                        ? `${appliedCoupon.discount_value}% הנחה` 
-                        : `₪${appliedCoupon.discount_value} הנחה`}
-                      <span className="font-mono text-xs">({appliedCoupon.code})</span>
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <div className="text-3xl font-bold text-blue-600">₪79</div>
-                    <div className="text-sm text-neutral-500">תשלום חד פעמי</div>
-                  </>
-                )}
-              </div>
-
-              {/* Coupon Input */}
-              <div className="mb-4">
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={couponCode}
-                    onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
-                    placeholder="קוד קופון"
-                    disabled={!!appliedCoupon}
-                    className="flex-1 px-3 py-2 border border-neutral-300 rounded-lg text-sm text-neutral-900 bg-white disabled:bg-neutral-100 text-right"
-                    dir="rtl"
-                  />
-                  {appliedCoupon ? (
-                    <button
-                      onClick={() => {
-                        setAppliedCoupon(null);
-                        setCouponCode("");
-                      }}
-                      className="px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg text-sm"
-                    >
-                      הסר
-                    </button>
-                  ) : (
-                    <button
-                      onClick={validateCoupon}
-                      disabled={couponLoading || !couponCode.trim()}
-                      className="px-4 py-2 bg-neutral-100 text-neutral-700 rounded-lg text-sm hover:bg-neutral-200 disabled:opacity-50"
-                    >
-                      {couponLoading ? "..." : "החל"}
-                    </button>
-                  )}
-                </div>
-                {couponError && (
-                  <p className="text-xs text-red-500 mt-1">{couponError}</p>
-                )}
-              </div>
-
-              {/* What you get */}
-              <div className="space-y-2 mb-4">
-                <div className="flex items-center gap-2 text-sm text-neutral-600">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                  <span>כתב תביעה מקצועי ומותאם אישית</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm text-neutral-600">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                  <span>קובץ PDF להורדה מיידית</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm text-neutral-600">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                  <span>הנחיות מפורטות להגשה</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm text-neutral-600">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                  <span>אפשרות להורדה חוזרת</span>
-                </div>
-              </div>
-
-              {/* Terms Agreement */}
-              <label className="flex items-start gap-3 mb-4 cursor-pointer group">
-                <input
-                  type="checkbox"
-                  checked={agreedToTerms}
-                  onChange={(e) => setAgreedToTerms(e.target.checked)}
-                  className="mt-1 w-4 h-4 rounded border-neutral-300 text-blue-600 focus:ring-blue-500"
-                />
-                <span className="text-xs text-neutral-500 leading-relaxed">
-                  קראתי ואני מסכים/ה ל
-                  <a href="/terms" target="_blank" className="text-blue-600 hover:underline mx-1">תנאי השימוש</a>
-                  ול
-                  <a href="/privacy" target="_blank" className="text-blue-600 hover:underline mx-1">מדיניות הפרטיות</a>
-                  ול
-                  <a href="/refund" target="_blank" className="text-blue-600 hover:underline mx-1">מדיניות הביטול</a>.
-                  אני מבין/ה שהשירות אינו מהווה ייעוץ משפטי.
-                </span>
-              </label>
-
-              {/* Payment Button */}
-              <button
-                onClick={processPayment}
-                disabled={isProcessingPayment || !agreedToTerms}
-                className="w-full py-3 bg-gradient-to-r from-blue-600 to-emerald-500 text-white rounded-xl font-semibold hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-              >
-                {isProcessingPayment ? (
-                  <>
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                    מעבד תשלום...
-                  </>
-                ) : (
-                  <>
-                    <CreditCard className="w-5 h-5" />
-                    שלם ₪{calculateFinalPrice()} והורד
-                  </>
-                )}
-              </button>
-
-              {/* Cancel */}
-              {!isProcessingPayment && (
-                <button
-                  onClick={() => setShowPaymentModal(false)}
-                  className="w-full mt-3 py-2 text-neutral-500 hover:text-neutral-700 text-sm"
-                >
-                  ביטול
-                </button>
-              )}
-
-              {/* Security note */}
-              <div className="mt-4 flex items-center justify-center gap-2 text-xs text-neutral-400">
-                <Shield className="w-3 h-3" />
-                <span>תשלום מאובטח באמצעות SSL</span>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <PaymentModal
+        isOpen={showPaymentModal}
+        onClose={() => setShowPaymentModal(false)}
+        onPayment={processPayment}
+        isProcessing={isProcessingPayment}
+        agreedToTerms={agreedToTerms}
+        setAgreedToTerms={setAgreedToTerms}
+        couponCode={couponCode}
+        setCouponCode={setCouponCode}
+        couponLoading={couponLoading}
+        couponError={couponError}
+        appliedCoupon={appliedCoupon}
+        onValidateCoupon={validateCoupon}
+        onRemoveCoupon={() => {
+          setAppliedCoupon(null);
+          setCouponCode("");
+        }}
+        calculateFinalPrice={calculateFinalPrice}
+      />
 
       {/* Preview Modal */}
-      <AnimatePresence>
-        {showPreview && claimData && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4"
-            onClick={() => setShowPreview(false)}
-          >
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-white rounded-2xl max-w-2xl w-full max-h-[85vh] overflow-hidden shadow-2xl flex flex-col"
-              onClick={(e) => e.stopPropagation()}
-            >
-              {/* Preview Header */}
-              <div className="bg-gradient-to-r from-blue-600 to-emerald-500 px-6 py-4 flex items-center justify-between">
-                <div className="flex items-center gap-3 text-white">
-                  <Eye className="w-5 h-5" />
-                  <span className="font-semibold">תצוגה מקדימה</span>
-                </div>
-                <button
-                  onClick={() => setShowPreview(false)}
-                  className="text-white/80 hover:text-white"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-
-              {/* Preview Content - Non-selectable */}
-              <div 
-                className="flex-1 overflow-y-auto p-4 bg-neutral-100 relative"
-                style={{ 
-                  userSelect: 'none',
-                  WebkitUserSelect: 'none',
-                  MozUserSelect: 'none',
-                  msUserSelect: 'none'
-                }}
-                onCopy={(e) => e.preventDefault()}
-                onCut={(e) => e.preventDefault()}
-                onContextMenu={(e) => e.preventDefault()}
-              >
-                {/* Document Preview - Exact PDF replica */}
-                <div className="bg-white shadow-lg mx-auto max-w-[600px] p-8 relative text-[12px] leading-[1.7] text-black" style={{ fontFamily: 'David, "Times New Roman", serif', color: '#000' }}>
-                  
-                  {/* Subtle Watermark */}
-                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0 overflow-hidden">
-                    <div className="text-[60px] font-bold text-neutral-200 rotate-[-45deg] whitespace-nowrap">
-                      תצוגה מקדימה
-                    </div>
-                  </div>
-
-                  {/* All content relative to watermark */}
-                  <div className="relative z-10 text-black">
-                    {/* Header */}
-                    <div className="text-center border-b-2 border-black pb-3 mb-5">
-                      <div className="text-[11px] font-bold mb-1 text-black">מדינת ישראל</div>
-                      <div className="text-[11px] font-bold mb-2 text-black">הרשות השופטת</div>
-                      <div className="text-[15px] font-bold mb-1 text-black">
-                        {findCourtByCity(claimData.defendant?.city || claimData.plaintiff?.city || "")?.name || "בית משפט לתביעות קטנות"}
-                      </div>
-                      <div className="text-[9px] text-neutral-600">
-                        {findCourtByCity(claimData.defendant?.city || claimData.plaintiff?.city || "")?.address || ""}
-                      </div>
-                    </div>
-
-                    {/* Date */}
-                    <div className="text-left text-[11px] text-black mb-4">
-                      תאריך: {new Date().toLocaleDateString("he-IL")}
-                    </div>
-
-                    {/* Parties Section */}
-                    <div className="mb-5 text-black">
-                      <div className="flex mb-3">
-                        <div className="font-bold min-w-[60px] text-[12px]">התובע:</div>
-                        <div className="flex-1">
-                          <div className="font-bold">{claimData.plaintiff?.fullName}</div>
-                          <div>ת.ז. {claimData.plaintiff?.idNumber}</div>
-                          <div>{claimData.plaintiff?.address}, {claimData.plaintiff?.city} {claimData.plaintiff?.zipCode}</div>
-                          <div>טל': {claimData.plaintiff?.phone} | דוא"ל: {claimData.plaintiff?.email}</div>
-                        </div>
-                      </div>
-
-                      <div className="text-center font-bold text-[12px] my-3">- נ ג ד -</div>
-
-                      <div className="flex">
-                        <div className="font-bold min-w-[60px] text-[12px]">הנתבע:</div>
-                        <div className="flex-1">
-                          <div className="font-bold">{claimData.defendant?.name}</div>
-                          <div>{claimData.defendant?.type === "company" ? "ח.פ." : claimData.defendant?.type === "business" ? "ע.מ." : "ת.ז."} {claimData.defendant?.idOrCompanyNumber}</div>
-                          <div>{claimData.defendant?.address}, {claimData.defendant?.city} {claimData.defendant?.zipCode}</div>
-                          {claimData.defendant?.phone && <div>טל': {claimData.defendant?.phone}</div>}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Main Title */}
-                    <div className="text-center text-[16px] font-bold underline mb-5 text-black">כתב תביעה</div>
-
-                    {/* Amount */}
-                    <div className="text-center font-bold mb-5 text-[13px] text-black">
-                      סכום התביעה: {claimData.claim?.amount?.toLocaleString("he-IL")} ₪
-                    </div>
-
-                    {/* Section A - Intro - FULL */}
-                    <div className="mb-4 text-black">
-                      <div className="font-bold underline mb-2 text-[12px]">א. מבוא</div>
-                      <p className="pr-5 mb-1.5" style={{ textIndent: '-20px', paddingRight: '20px', color: '#000' }}>
-                        1. התובע מגיש בזאת תביעה כספית כנגד הנתבע, לתשלום סך של {claimData.claim?.amount?.toLocaleString("he-IL")} ₪.
-                      </p>
-                      <p className="pr-5 mb-1.5" style={{ textIndent: '-20px', paddingRight: '20px', color: '#000' }}>
-                        2. לבית משפט נכבד זה סמכות עניינית לדון בתביעה, מכוח סעיף 60 לחוק בתי המשפט [נוסח משולב], התשמ"ד-1984, שכן סכום התביעה אינו עולה על 38,900 ₪.
-                      </p>
-                      <p className="pr-5 mb-1.5" style={{ textIndent: '-20px', paddingRight: '20px', color: '#000' }}>
-                        3. לבית משפט נכבד זה סמכות מקומית לדון בתביעה, שכן מקום מושבו של הנתבע הוא בתחום שיפוטו של בית משפט זה.
-                      </p>
-                    </div>
-
-                    {/* Section B - Facts - FULL */}
-                    <div className="mb-4 text-black">
-                      <div className="font-bold underline mb-2 text-[12px]">ב. העובדות</div>
-                      <p className="pr-5 mb-1.5" style={{ textIndent: '-20px', paddingRight: '20px', color: '#000' }}>
-                        4. ביום {claimData.claim?.date} התקיימו בין הצדדים יחסים עסקיים/משפטיים כמפורט להלן.
-                      </p>
-                      <p className="pr-5 mb-1.5" style={{ textIndent: '-20px', paddingRight: '20px', color: '#000' }}>
-                        5. {claimData.claim?.description}
-                      </p>
-                    </div>
-
-                    {/* LOCKED SECTION - More content hidden */}
-                    <div className="relative mt-4">
-                      {/* Semi-visible blurred content */}
-                      <div className="filter blur-[3px] opacity-40 text-neutral-500">
-                        <div className="mb-3">
-                          <div className="font-bold underline mb-2 text-[12px]">ג. הנזק</div>
-                          <p className="pr-5 mb-1.5 text-[11px]" style={{ textIndent: '-20px', paddingRight: '20px' }}>
-                            6. כתוצאה ממעשי ו/או מחדלי הנתבע, נגרם לתובע נזק כספי בסך של {claimData.claim?.amount?.toLocaleString("he-IL")} ₪.
-                          </p>
-                        </div>
-                        <div className="mb-3">
-                          <div className="font-bold underline mb-2 text-[12px]">ד. הבסיס המשפטי</div>
-                          <div className="border border-neutral-300 p-2 mb-2 bg-neutral-50 text-[11px]">
-                            <strong>עילת התביעה מבוססת על:</strong> חוק הגנת הצרכן / חוק החוזים
-                          </div>
-                        </div>
-                        <div className="mb-3">
-                          <div className="font-bold underline mb-2 text-[12px]">ה. הסעד המבוקש</div>
-                          <p className="text-[11px]">לאור כל האמור לעיל, מתבקש בית המשפט הנכבד לחייב את הנתבע...</p>
-                        </div>
-                        <div className="mb-3">
-                          <div className="font-bold underline mb-2 text-[12px]">ו. הצהרת התובע</div>
-                          <p className="text-[11px]">אני החתום מטה מצהיר כי כל העובדות המפורטות...</p>
-                        </div>
-                      </div>
-
-                      {/* Lock overlay */}
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="bg-white/95 px-5 py-4 rounded-xl border border-amber-300 shadow-lg text-center">
-                          <Shield className="w-6 h-6 text-amber-500 mx-auto mb-2" />
-                          <div className="font-bold text-neutral-700 text-sm">המשך המסמך נעול</div>
-                          <div className="text-xs text-neutral-500 mt-1">פירוט הנזק, בסיס משפטי, הצהרות וחתימה</div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Preview Footer */}
-              <div className="border-t border-neutral-200 p-4 bg-neutral-50">
-                <button
-                  onClick={() => {
-                    setShowPreview(false);
-                    setShowPaymentModal(true);
-                  }}
-                  className="w-full py-3 bg-gradient-to-r from-blue-600 to-emerald-500 text-white rounded-xl font-semibold hover:opacity-90 transition-all flex items-center justify-center gap-2"
-                >
-                  <CreditCard className="w-5 h-5" />
-                  שלם ₪79 וקבל את המסמך המלא
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <PreviewModal
+        isOpen={showPreview}
+        claimData={claimData}
+        onClose={() => setShowPreview(false)}
+        onPayment={() => {
+          setShowPreview(false);
+          setShowPaymentModal(true);
+        }}
+      />
 
 
 
@@ -1545,7 +1281,10 @@ ${data.content.slice(0, 8000)}${data.content.length > 8000 ? "\n...(קוצר)" :
       )}
 
       {/* Messages Area */}
-      <main className="flex-1 overflow-y-auto px-4 py-6">
+      <main 
+        className="flex-1 overflow-y-auto px-4 py-6"
+        onClick={() => showMobileSteps && setShowMobileSteps(false)}
+      >
         <div className="max-w-3xl mx-auto space-y-4">
           <AnimatePresence initial={false}>
             {messages.map((message) => (
@@ -1759,6 +1498,7 @@ ${data.content.slice(0, 8000)}${data.content.length > 8000 ? "\n...(קוצר)" :
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
+              onFocus={() => showMobileSteps && setShowMobileSteps(false)}
               placeholder="הקלד את תשובתך..."
               rows={1}
               disabled={isLoading}

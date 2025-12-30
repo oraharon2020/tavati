@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
     // Send reminders
     for (const session of incompleteSessions) {
       try {
-        const message = generateReminderMessage(session.claim_data);
+        const message = generateReminderMessage(session.id, session.claim_data);
         
         // Send SMS via your SMS provider (e.g., Twilio, MessageBird, etc.)
         const smsSent = await sendSMS(session.phone, message);
@@ -100,16 +100,25 @@ export async function POST(request: NextRequest) {
   }
 }
 
-function generateReminderMessage(claimData?: { topic?: string }): string {
+function generateReminderMessage(sessionId: string, claimData?: { topic?: string }, isSecondReminder = false): string {
   const topicText = claimData?.topic ? ` בנושא "${claimData.topic}"` : "";
+  const directLink = `tavati.co.il/chat?session=${sessionId}`;
   
-  const messages = [
-    `היי! 👋 התחלת תביעה${topicText} באתר תבעתי אבל לא סיימת. רוצים לעזור לך להשלים? הקישור שלך שמור: tavati.co.il/my-area`,
-    `שלום! ראינו שהתחלת תביעה${topicText} ב-תבעתי. חבל לוותר! המשיכו מאיפה שהפסקתם: tavati.co.il/my-area`,
-    `תזכורת קטנה: יש לך תביעה${topicText} שמחכה לך ב-תבעתי. עוד כמה דקות והיא מוכנה! tavati.co.il/my-area`,
+  const firstReminderMessages = [
+    `היי! 👋 התחלת תביעה${topicText} באתר תבעתי אבל לא סיימת. רוצים לעזור לך להשלים? המשך מכאן: ${directLink}`,
+    `שלום! ראינו שהתחלת תביעה${topicText} ב-תבעתי. חבל לוותר! המשיכו מאיפה שהפסקתם: ${directLink}`,
+    `תזכורת קטנה: יש לך תביעה${topicText} שמחכה לך ב-תבעתי. עוד כמה דקות והיא מוכנה! ${directLink}`,
+  ];
+
+  const secondReminderMessages = [
+    `היי! 👋 עוד לא סיימת את התביעה${topicText}. אנחנו פה אם צריך עזרה! המשך: ${directLink}`,
+    `תזכורת אחרונה: התביעה שלך${topicText} עדיין מחכה. סיים עכשיו: ${directLink}`,
+    `לא לשכוח! יש לך תביעה${topicText} באמצע. כמה דקות וסיימת: ${directLink}`,
   ];
   
+  const messages = isSecondReminder ? secondReminderMessages : firstReminderMessages;
   const baseMessage = messages[Math.floor(Math.random() * messages.length)];
+  
   // חובה להוסיף אופציית הסרה לפי חוק הספאם
   return `${baseMessage}\n\nלהסרה: tavati.co.il/unsubscribe`;
 }
