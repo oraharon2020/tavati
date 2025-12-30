@@ -69,13 +69,16 @@ export default function Header() {
             <Link href="/" onClick={(e) => handleNavClick(e, "/")} className="px-4 py-2 text-neutral-600 hover:text-neutral-900 hover:bg-blue-50 rounded-lg transition-colors">
               בית
             </Link>
+            <Link href="/services" onClick={(e) => handleNavClick(e, "/services")} className="px-4 py-2 text-neutral-600 hover:text-neutral-900 hover:bg-blue-50 rounded-lg transition-colors">
+              סוגי תביעות
+            </Link>
             <Link href="/#how-it-works" onClick={(e) => handleNavClick(e, "/#how-it-works")} className="px-4 py-2 text-neutral-600 hover:text-neutral-900 hover:bg-blue-50 rounded-lg transition-colors">
               איך זה עובד
             </Link>
-            <Link href="/#pricing" onClick={(e) => handleNavClick(e, "/#pricing")} className="px-4 py-2 text-neutral-600 hover:text-neutral-900 hover:bg-blue-50 rounded-lg transition-colors">
-              מחירים
+            <Link href="/blog" onClick={(e) => handleNavClick(e, "/blog")} className="px-4 py-2 text-neutral-600 hover:text-neutral-900 hover:bg-blue-50 rounded-lg transition-colors">
+              מדריכים
             </Link>
-            <Link href="/#faq" onClick={(e) => handleNavClick(e, "/#faq")} className="px-4 py-2 text-neutral-600 hover:text-neutral-900 hover:bg-blue-50 rounded-lg transition-colors">
+            <Link href="/faq" onClick={(e) => handleNavClick(e, "/faq")} className="px-4 py-2 text-neutral-600 hover:text-neutral-900 hover:bg-blue-50 rounded-lg transition-colors">
               שאלות נפוצות
             </Link>
           </nav>
@@ -120,13 +123,16 @@ export default function Header() {
               <Link href="/" onClick={(e) => handleNavClick(e, "/")} className="px-4 py-3 text-neutral-900 font-semibold hover:bg-blue-50 rounded-lg transition-colors">
                 בית
               </Link>
+              <Link href="/services" onClick={(e) => handleNavClick(e, "/services")} className="px-4 py-3 text-neutral-600 hover:text-neutral-900 hover:bg-blue-50 rounded-lg transition-colors">
+                סוגי תביעות
+              </Link>
               <Link href="/#how-it-works" onClick={(e) => handleNavClick(e, "/#how-it-works")} className="px-4 py-3 text-neutral-600 hover:text-neutral-900 hover:bg-blue-50 rounded-lg transition-colors">
                 איך זה עובד
               </Link>
-              <Link href="/#pricing" onClick={(e) => handleNavClick(e, "/#pricing")} className="px-4 py-3 text-neutral-600 hover:text-neutral-900 hover:bg-blue-50 rounded-lg transition-colors">
-                מחירים
+              <Link href="/blog" onClick={(e) => handleNavClick(e, "/blog")} className="px-4 py-3 text-neutral-600 hover:text-neutral-900 hover:bg-blue-50 rounded-lg transition-colors">
+                מדריכים
               </Link>
-              <Link href="/#faq" onClick={(e) => handleNavClick(e, "/#faq")} className="px-4 py-3 text-neutral-600 hover:text-neutral-900 hover:bg-blue-50 rounded-lg transition-colors">
+              <Link href="/faq" onClick={(e) => handleNavClick(e, "/faq")} className="px-4 py-3 text-neutral-600 hover:text-neutral-900 hover:bg-blue-50 rounded-lg transition-colors">
                 שאלות נפוצות
               </Link>
               <div className="border-t border-neutral-100 mt-2 pt-2">
