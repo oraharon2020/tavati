@@ -80,6 +80,37 @@ export default function ChatInterface({ sessionId, phone }: ChatInterfaceProps =
     return null;
   };
 
+  // Check for payment success when returning from payment page
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    
+    const urlParams = new URLSearchParams(window.location.search);
+    const paymentStatus = urlParams.get("payment");
+    const returnedSessionId = urlParams.get("session");
+    
+    if (paymentStatus === "success") {
+      // Payment was successful
+      setHasPaid(true);
+      setShowPaymentModal(false);
+      setShowNextSteps(true);
+      
+      // Clean up URL (remove query params)
+      const cleanUrl = window.location.pathname;
+      window.history.replaceState({}, "", cleanUrl);
+      
+      // If we have claim data, generate PDF
+      if (claimData) {
+        generateClaimPDF(claimData).then(() => {
+          setPdfDownloaded(true);
+        }).catch(console.error);
+      }
+    } else if (paymentStatus === "cancelled") {
+      // Payment was cancelled - just clean up URL
+      const cleanUrl = window.location.pathname;
+      window.history.replaceState({}, "", cleanUrl);
+    }
+  }, [claimData]);
+
   // Load existing session if sessionId provided, or reset for new session
   useEffect(() => {
     if (sessionId) {
@@ -123,6 +154,12 @@ export default function ChatInterface({ sessionId, phone }: ChatInterfaceProps =
           // Load claim_data if exists
           if (data.claim_data && Object.keys(data.claim_data).length > 0) {
             setClaimData(data.claim_data);
+          }
+          
+          // Check if already paid
+          if (data.has_paid) {
+            setHasPaid(true);
+            setShowNextSteps(true);
           }
         }
       }
@@ -503,30 +540,49 @@ ${data.content.slice(0, 8000)}${data.content.length > 8000 ? "\n...(קוצר)" :
     setShowPaymentModal(true);
   };
 
-  // סימולציה של תשלום (יוחלף ב-API אמיתי)
+  // תשלום דרך Grow/משולם
   const processPayment = async () => {
+    if (!claimData || !currentSessionId) {
+      alert("שגיאה: חסרים נתונים. אנא נסה שוב.");
+      return;
+    }
+    
     setIsProcessingPayment(true);
     
     try {
-      // TODO: כאן יתחבר ל-API תשלום אמיתי
-      // const response = await fetch('/api/payment', { ... });
+      // יצירת דף תשלום ב-Grow/משולם
+      const response = await fetch("/api/payment/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          sessionId: currentSessionId,
+          amount: calculateFinalPrice(),
+          description: "כתב תביעה - תבעתי",
+          customerName: claimData.plaintiff.fullName,
+          customerPhone: claimData.plaintiff.phone,
+          customerEmail: claimData.plaintiff.email || undefined,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || data.details || "שגיאה ביצירת דף תשלום");
+      }
+
+      // העברה לדף התשלום של משולם
+      if (data.paymentUrl) {
+        window.location.href = data.paymentUrl;
+      } else {
+        throw new Error("לא התקבל קישור לדף תשלום");
+      }
       
-      // סימולציה של תשלום מוצלח (2 שניות)
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      setHasPaid(true);
-      setShowPaymentModal(false);
-      
-      // הורדת ה-PDF אחרי תשלום מוצלח
-      await generateClaimPDF(claimData!);
-      setPdfDownloaded(true);
-      setShowNextSteps(true);
     } catch (error) {
       console.error("Payment failed:", error);
-      alert("שגיאה בתשלום. אנא נסה שוב.");
-    } finally {
+      alert(error instanceof Error ? error.message : "שגיאה בתשלום. אנא נסה שוב.");
       setIsProcessingPayment(false);
     }
+    // לא מכבים את isProcessingPayment כי הדף עובר redirect
   };
 
   const handleGeneratePDF = async () => {
