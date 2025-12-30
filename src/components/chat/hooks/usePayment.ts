@@ -55,11 +55,31 @@ export function usePayment({
   const [appliedCoupon, setAppliedCoupon] = useState<AppliedCoupon | null>(null);
 
   // Handle payment success - called when payment is completed
-  const handlePaymentSuccess = useCallback(() => {
+  const handlePaymentSuccess = useCallback(async () => {
     console.log('handlePaymentSuccess called - setting hasPaid=true, showNextSteps=true');
     setHasPaid(true);
     setShowPaymentModal(false);
     setShowNextSteps(true);
+    
+    // Save to localStorage as backup
+    if (typeof window !== 'undefined' && currentSessionId) {
+      localStorage.setItem(`paid_${currentSessionId}`, 'true');
+      console.log('Saved payment status to localStorage');
+    }
+    
+    // Update database directly (don't rely only on webhook)
+    if (currentSessionId) {
+      try {
+        await fetch(`/api/session/${currentSessionId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ has_paid: true, status: 'paid' }),
+        });
+        console.log('Updated payment status in database');
+      } catch (error) {
+        console.error('Failed to update payment status in DB:', error);
+      }
+    }
     
     // If we have claim data, generate PDF
     if (claimData) {
@@ -69,7 +89,7 @@ export function usePayment({
         setPdfDownloaded(true);
       }).catch(console.error);
     }
-  }, [claimData, setHasPaid, setShowNextSteps, setPdfDownloaded, setShowPaymentModal]);
+  }, [claimData, currentSessionId, setHasPaid, setShowNextSteps, setPdfDownloaded, setShowPaymentModal]);
 
   // Check for payment success when returning from payment page (URL params)
   useEffect(() => {

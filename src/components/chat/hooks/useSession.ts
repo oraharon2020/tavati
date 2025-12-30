@@ -96,8 +96,10 @@ export function useSession({ sessionId, phone }: UseSessionProps): UseSessionRet
             setClaimData(data.claim_data);
           }
           
-          // Check if already paid
-          if (data.has_paid) {
+          // Check if already paid (from DB or localStorage)
+          const localPaid = typeof window !== 'undefined' && localStorage.getItem(`paid_${id}`) === 'true';
+          if (data.has_paid || localPaid) {
+            console.log('Session marked as paid:', { db: data.has_paid, local: localPaid });
             setHasPaid(true);
             setShowNextSteps(true);
           }
