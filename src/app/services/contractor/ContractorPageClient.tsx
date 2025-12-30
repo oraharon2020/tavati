@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
 import { 
   Wrench, 
   CheckCircle, 
@@ -14,7 +16,9 @@ import {
 
 export default function ContractorPageClient() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white flex flex-col">
+      <Header />
+      <main className="flex-1">
       {/* Hero */}
       <div className="bg-gradient-to-br from-orange-600 to-orange-800 text-white py-16">
         <div className="container mx-auto px-4">
@@ -325,6 +329,8 @@ export default function ContractorPageClient() {
 
         </div>
       </div>
+      </main>
+      <Footer />
     </div>
   );
 }
