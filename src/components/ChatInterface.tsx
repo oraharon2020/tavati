@@ -614,10 +614,12 @@ ${data.content.slice(0, 8000)}${data.content.length > 8000 ? "\n...(קוצר)" :
 
   // עיבוד והצגת הודעות
   const formatMessage = (content: string) => {
-    // הסתר JSON blocks
-    let formatted = content.replace(/```json[\s\S]*?```/g, "");
+    // הסתר JSON blocks - גם אלה שעדיין נכתבים (streaming)
+    let formatted = content.replace(/```json[\s\S]*?(```|$)/g, "");
     // הסתר גם אם יש JSON בלי backticks
-    formatted = formatted.replace(/\{\s*"status"\s*:\s*"complete"[\s\S]*?\}\s*\}\s*\}/g, "");
+    formatted = formatted.replace(/\{\s*"status"\s*:\s*"complete"[\s\S]*/g, "");
+    // הסתר כל דבר שמתחיל ב-{ ונראה כמו JSON
+    formatted = formatted.replace(/\{\s*"\s*[\s\S]*$/g, "");
     // נקה רווחים מיותרים
     formatted = formatted.replace(/\n{3,}/g, "\n\n").trim();
     // אם נשאר רק טקסט קצר אחרי הסרת JSON, הוסף הודעה
