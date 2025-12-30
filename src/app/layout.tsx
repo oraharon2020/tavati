@@ -6,6 +6,7 @@ import { ToastProvider } from "@/components/Toast";
 import { Analytics } from "@vercel/analytics/react";
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://tavati.co.il"),
   title: "תבעתי - תביעות קטנות בקלות | כתב תביעה תוך דקות",
   description: "צרו כתב תביעה מקצועי לבית משפט לתביעות קטנות תוך דקות. המערכת החכמה שמנחה אתכם צעד אחר צעד. ללא צורך בעורך דין. רק ₪79.",
   keywords: ["תביעות קטנות", "בית משפט", "כתב תביעה", "תביעה קטנה", "הגשת תביעה", "טופס תביעה"],
@@ -13,6 +14,10 @@ export const metadata: Metadata = {
   creator: "תבעתי",
   publisher: "תבעתי",
   robots: "index, follow",
+  applicationName: "תבעתי",
+  formatDetection: {
+    telephone: false,
+  },
   openGraph: {
     type: "website",
     locale: "he_IL",
@@ -22,21 +27,25 @@ export const metadata: Metadata = {
     description: "צרו כתב תביעה מקצועי לבית משפט לתביעות קטנות תוך דקות. ללא צורך בעורך דין.",
     images: [
       {
-        url: "/og-image.png",
-        width: 1200,
-        height: 630,
+        url: "/logo.png",
+        width: 512,
+        height: 512,
         alt: "תבעתי - תביעות קטנות בקלות",
       },
     ],
   },
   twitter: {
-    card: "summary_large_image",
+    card: "summary",
     title: "תבעתי - תביעות קטנות בקלות",
     description: "צרו כתב תביעה מקצועי לבית משפט לתביעות קטנות תוך דקות.",
-    images: ["/og-image.png"],
+    images: ["/logo.png"],
   },
   alternates: {
     canonical: "https://tavati.co.il",
+  },
+  icons: {
+    icon: "/icon.png",
+    apple: "/apple-touch-icon.png",
   },
 };
 
