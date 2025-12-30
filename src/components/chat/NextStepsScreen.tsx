@@ -12,7 +12,6 @@ interface NextStepsScreenProps {
   attachments: Attachment[];
   onGeneratePDF: () => void;
   onShowAttachments: () => void;
-  onBackToChat: () => void;
   onReset: () => void;
 }
 
@@ -21,7 +20,6 @@ export function NextStepsScreen({
   attachments,
   onGeneratePDF,
   onShowAttachments,
-  onBackToChat,
   onReset,
 }: NextStepsScreenProps) {
   // חישוב פרטי בית המשפט והאגרה
@@ -48,12 +46,10 @@ export function NextStepsScreen({
               <p className="text-xs text-gray-500">מערכת הגשת תביעות</p>
             </div>
           </div>
-          <button
-            onClick={onBackToChat}
-            className="px-4 py-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
-          >
-            חזרה לשיחה
-          </button>
+          <div className="flex items-center gap-1.5 text-sm bg-green-100 rounded-full px-3 py-1.5">
+            <CheckCircle2 className="w-4 h-4 text-green-600" />
+            <span className="font-semibold text-green-700">שולם</span>
+          </div>
         </div>
       </header>
 

@@ -73,7 +73,7 @@ export function usePayment({
         await fetch(`/api/session/${currentSessionId}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ has_paid: true, status: 'paid' }),
+          body: JSON.stringify({ status: 'paid' }),
         });
         console.log('Updated payment status in database');
       } catch (error) {

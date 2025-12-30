@@ -97,7 +97,6 @@ export default function ChatInterface({ sessionId, phone }: ChatInterfaceProps =
         attachments={session.attachments}
         onGeneratePDF={payment.handleGeneratePDF}
         onShowAttachments={() => setShowAttachmentsScreen(true)}
-        onBackToChat={() => session.setShowNextSteps(false)}
         onReset={session.resetChat}
       />
     );

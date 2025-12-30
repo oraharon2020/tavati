@@ -83,7 +83,7 @@ export async function POST(req: NextRequest) {
       const { error: updateError } = await supabase
         .from("sessions")
         .update({
-          has_paid: true,
+          status: 'paid',
           payment_data: {
             transaction_id: transactionId,
             process_id: processId,
