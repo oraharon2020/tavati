@@ -3,6 +3,7 @@ import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
 import WhatsAppButton from "@/components/WhatsAppButton";
 import { ToastProvider } from "@/components/Toast";
+import { Analytics } from "@vercel/analytics/react";
 
 export const metadata: Metadata = {
   title: "תבעתי - תביעות קטנות בקלות | כתב תביעה תוך דקות",
@@ -141,6 +142,7 @@ export default function RootLayout({
             <WhatsAppButton />
           </ToastProvider>
         </AuthProvider>
+        <Analytics />
       </body>
     </html>
   );
