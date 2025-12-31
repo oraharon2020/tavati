@@ -116,9 +116,9 @@ export async function POST(req: NextRequest) {
       }
 
       // Call approve endpoint to confirm we received the webhook
-      // This is required by Grow
+      // This is required by Grow - must send all webhook data back
       try {
-        await approveTransaction(processId, processToken, sum);
+        await approveTransaction(data);
         console.log(`Transaction ${transactionId} approved`);
       } catch (approveError) {
         console.error("Error approving transaction:", approveError);
@@ -138,14 +138,40 @@ export async function POST(req: NextRequest) {
   }
 }
 
-// Approve transaction function
-async function approveTransaction(processId: string, processToken: string, sum: string) {
+// Approve transaction function - must send ALL fields received from webhook
+async function approveTransaction(webhookData: Record<string, string>) {
   const formData = new FormData();
+  
+  // Required auth fields
   formData.append("pageCode", MESHULAM_PAGE_CODE);
   formData.append("userId", MESHULAM_USER_ID);
-  formData.append("processId", processId);
-  formData.append("processToken", processToken);
-  formData.append("sum", sum);
+  
+  // All required fields from webhook data
+  formData.append("transactionId", webhookData.transactionId || "");
+  formData.append("transactionToken", webhookData.transactionToken || "");
+  formData.append("transactionTypeId", webhookData.transactionTypeId || "1"); // 1=Credit, 6=Bit, 13=Apple Pay, 14=Google Pay
+  formData.append("paymentType", webhookData.paymentType || "1"); // 1=Direct, 2=Regular, 4=Payments
+  formData.append("sum", webhookData.sum || "0");
+  formData.append("firstPaymentSum", webhookData.firstPaymentSum || webhookData.sum || "0");
+  formData.append("periodicalPaymentSum", webhookData.periodicalPaymentSum || "0");
+  formData.append("paymentsNum", webhookData.paymentsNum || "1");
+  formData.append("allPaymentsNum", webhookData.allPaymentsNum || webhookData.paymentsNum || "1");
+  formData.append("paymentDate", webhookData.paymentDate || new Date().toISOString().split('T')[0]);
+  formData.append("asmachta", webhookData.asmachta || "");
+  formData.append("description", webhookData.description || "תביעה קטנה - tavati.app");
+  formData.append("fullName", webhookData.fullName || "");
+  formData.append("payerPhone", webhookData.phone || webhookData.payerPhone || "");
+  formData.append("payerEmail", webhookData.email || webhookData.payerEmail || "");
+  formData.append("cardSuffix", webhookData.cardSuffix || "");
+  formData.append("cardType", webhookData.cardType || "");
+  formData.append("cardTypeCode", webhookData.cardTypeCode || "1");
+  formData.append("cardBrand", webhookData.cardBrand || "");
+  formData.append("cardBrandCode", webhookData.cardBrandCode || "3"); // Default to Visa
+  formData.append("cardExp", webhookData.cardExp || "");
+  formData.append("processId", webhookData.processId || "");
+  formData.append("processToken", webhookData.processToken || "");
+
+  console.log("Sending approveTransaction with data:", Object.fromEntries(formData.entries()));
 
   const response = await fetch(`${MESHULAM_API_URL}/approveTransaction`, {
     method: "POST",
@@ -153,6 +179,7 @@ async function approveTransaction(processId: string, processToken: string, sum: 
   });
 
   const result = await response.json();
+  console.log("approveTransaction response:", JSON.stringify(result));
   
   if (result.status !== 1 && result.status !== "1") {
     throw new Error(`Approve failed: ${JSON.stringify(result)}`);
