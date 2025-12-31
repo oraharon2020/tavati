@@ -2,13 +2,11 @@
 
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
-import Script from "next/script";
 
 export default function TestPaymentPage() {
   const [sessionId, setSessionId] = useState("");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<string | null>(null);
-  const [sdkLoaded, setSdkLoaded] = useState(false);
 
   const createTestSession = async () => {
     setLoading(true);
@@ -38,25 +36,39 @@ export default function TestPaymentPage() {
       return;
     }
     
-    if (!window.growPayment) {
-      setResult("SDK not loaded yet!");
-      return;
-    }
-
-    setResult("Opening payment popup...");
+    setLoading(true);
+    setResult("Creating payment...");
     
-    window.growPayment.submit({
-      PageCode: process.env.NEXT_PUBLIC_MESHULAM_PAGE_CODE || "",
-      UserId: process.env.NEXT_PUBLIC_MESHULAM_USER_ID || "",
-      Sum: 8,
-      Description: "טסט תשלום",
-      FullName: "Test User",
-      Phone: "0500000000",
-      Email: "test@test.com",
-      cField1: sessionId,
-      SuccessUrl: `${window.location.origin}/payment-success?session_id=${sessionId}`,
-      CancelUrl: window.location.href,
-    });
+    try {
+      // Create payment via API to get authCode
+      const res = await fetch("/api/payment/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          sessionId,
+          amount: 8,
+          description: "טסט תשלום",
+          customerName: "Test User",
+          customerPhone: "0500000000",
+          customerEmail: "test@test.com",
+        }),
+      });
+      
+      const data = await res.json();
+      
+      if (data.authCode && window.growPayment && window.meshulam_sdk_ready) {
+        setResult(`Opening wallet with authCode: ${data.authCode}`);
+        window.growPayment.renderPaymentOptions(data.authCode);
+      } else if (data.paymentUrl) {
+        setResult(`Opening payment URL: ${data.paymentUrl}`);
+        window.open(data.paymentUrl, "_blank");
+      } else {
+        setResult(`Error: ${JSON.stringify(data)}`);
+      }
+    } catch (e) {
+      setResult(`Error: ${e}`);
+    }
+    setLoading(false);
   };
 
   const simulateWebhook = async () => {
@@ -94,11 +106,6 @@ export default function TestPaymentPage() {
 
   return (
     <div className="min-h-screen bg-gray-100 p-8" dir="rtl">
-      <Script
-        src="https://sandbox.meshulam.co.il/static/js/growSumbit.min.js"
-        onLoad={() => setSdkLoaded(true)}
-      />
-      
       <div className="max-w-md mx-auto bg-white rounded-lg shadow-lg p-6">
         <h1 className="text-2xl font-bold mb-6">טסט תשלום</h1>
         
@@ -114,10 +121,6 @@ export default function TestPaymentPage() {
             />
           </div>
           
-          <div className="text-sm text-gray-500">
-            SDK Status: {sdkLoaded ? "✅ Loaded" : "⏳ Loading..."}
-          </div>
-          
           <div className="flex gap-2">
             <button
               onClick={createTestSession}
@@ -129,7 +132,7 @@ export default function TestPaymentPage() {
             
             <button
               onClick={openPayment}
-              disabled={loading || !sessionId || !sdkLoaded}
+              disabled={loading || !sessionId}
               className="flex-1 bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 disabled:opacity-50"
             >
               פתח תשלום
