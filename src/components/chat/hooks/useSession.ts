@@ -3,11 +3,12 @@
 import { useState, useCallback, useEffect } from "react";
 import { Message, Attachment, UploadedFile } from "../types";
 import { ClaimData } from "@/lib/pdfGenerator";
-import { INITIAL_MESSAGE } from "@/lib/prompts";
+import { ServiceType, getServiceInitialMessage } from "@/lib/services";
 
 interface UseSessionProps {
   sessionId?: string | null;
   phone?: string | null;
+  serviceType?: ServiceType;
 }
 
 interface UseSessionReturn {
@@ -35,16 +36,11 @@ interface UseSessionReturn {
   createNewSession: () => Promise<string | null>;
 }
 
-export function useSession({ sessionId, phone }: UseSessionProps): UseSessionReturn {
+export function useSession({ sessionId, phone, serviceType = 'claims' }: UseSessionProps): UseSessionReturn {
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(sessionId || null);
   const [isLoadingSession, setIsLoadingSession] = useState(!!sessionId);
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: "welcome",
-      role: "assistant",
-      content: INITIAL_MESSAGE,
-    },
-  ]);
+  const [initialMessage, setInitialMessage] = useState<string>("");
+  const [messages, setMessages] = useState<Message[]>([]);
   const [claimData, setClaimData] = useState<ClaimData | null>(null);
   const [hasPaid, setHasPaid] = useState(false);
   const [showNextSteps, setShowNextSteps] = useState(false);
@@ -52,6 +48,20 @@ export function useSession({ sessionId, phone }: UseSessionProps): UseSessionRet
   const [showWelcome, setShowWelcome] = useState(true);
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [attachments, setAttachments] = useState<Attachment[]>([]);
+
+  // טעינת ההודעה הראשונה לפי שירות
+  useEffect(() => {
+    getServiceInitialMessage(serviceType).then((msg) => {
+      setInitialMessage(msg);
+      if (messages.length === 0) {
+        setMessages([{
+          id: "welcome",
+          role: "assistant",
+          content: msg,
+        }]);
+      }
+    });
+  }, [serviceType]);
 
   // Create new session when starting fresh chat
   const createNewSession = useCallback(async () => {
@@ -61,7 +71,7 @@ export function useSession({ sessionId, phone }: UseSessionProps): UseSessionRet
       const res = await fetch("/api/sessions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone }),
+        body: JSON.stringify({ phone, serviceType }),
       });
       
       if (res.ok) {
@@ -75,7 +85,7 @@ export function useSession({ sessionId, phone }: UseSessionProps): UseSessionRet
       console.error("Failed to create session:", error);
     }
     return null;
-  }, [phone, currentSessionId]);
+  }, [phone, currentSessionId, serviceType]);
 
   // Load existing session
   const loadSession = useCallback(async (id: string) => {
@@ -160,12 +170,13 @@ export function useSession({ sessionId, phone }: UseSessionProps): UseSessionRet
   }, [currentSessionId, phone, createNewSession]);
 
   // Reset chat
-  const resetChat = useCallback(() => {
+  const resetChat = useCallback(async () => {
+    const msg = await getServiceInitialMessage(serviceType);
     setMessages([
       {
         id: "welcome",
         role: "assistant",
-        content: INITIAL_MESSAGE,
+        content: msg,
       },
     ]);
     setShowWelcome(true);
@@ -175,7 +186,7 @@ export function useSession({ sessionId, phone }: UseSessionProps): UseSessionRet
     setHasPaid(false);
     setUploadedFiles([]);
     setAttachments([]);
-  }, []);
+  }, [serviceType]);
 
   // Load existing session if sessionId provided, or reset for new session
   useEffect(() => {
@@ -184,13 +195,15 @@ export function useSession({ sessionId, phone }: UseSessionProps): UseSessionRet
     } else {
       // Reset to fresh state for new session
       setCurrentSessionId(null);
-      setMessages([
-        {
-          id: "welcome",
-          role: "assistant",
-          content: INITIAL_MESSAGE,
-        },
-      ]);
+      getServiceInitialMessage(serviceType).then((msg) => {
+        setMessages([
+          {
+            id: "welcome",
+            role: "assistant",
+            content: msg,
+          },
+        ]);
+      });
       setShowWelcome(true);
       setShowNextSteps(false);
       setPdfDownloaded(false);
@@ -200,7 +213,7 @@ export function useSession({ sessionId, phone }: UseSessionProps): UseSessionRet
       setUploadedFiles([]);
       setAttachments([]);
     }
-  }, [sessionId, loadSession]);
+  }, [sessionId, loadSession, serviceType]);
 
   return {
     currentSessionId,

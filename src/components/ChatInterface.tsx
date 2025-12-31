@@ -13,24 +13,32 @@ import {
   ChatWelcome,
   NextStepsScreen,
   AttachmentsScreen,
-  STEPS,
   useSession,
   useChat,
   usePayment,
   useFileUpload,
+  getStepsForService,
+  getPriceForService,
 } from "./chat";
+import { ServiceType, SERVICES } from "@/lib/services";
 
 interface ChatInterfaceProps {
   sessionId?: string | null;
   phone?: string | null;
+  serviceType?: ServiceType;
 }
 
-export default function ChatInterface({ sessionId, phone }: ChatInterfaceProps = {}) {
+export default function ChatInterface({ sessionId, phone, serviceType = 'claims' }: ChatInterfaceProps = {}) {
   const [showMobileSteps, setShowMobileSteps] = useState(false);
   const [showAttachmentsScreen, setShowAttachmentsScreen] = useState(false);
+  
+  // קבלת קונפיגורציה לפי שירות
+  const serviceConfig = SERVICES[serviceType];
+  const steps = getStepsForService(serviceType);
+  const price = getPriceForService(serviceType);
 
   // Session hook - manages all session state
-  const session = useSession({ sessionId, phone });
+  const session = useSession({ sessionId, phone, serviceType });
 
   // Chat hook - manages messages and input
   const chat = useChat({
@@ -41,6 +49,8 @@ export default function ChatInterface({ sessionId, phone }: ChatInterfaceProps =
     uploadedFiles: session.uploadedFiles,
     setUploadedFiles: session.setUploadedFiles,
     claimData: session.claimData,
+    serviceType,
+    maxSteps: serviceConfig.maxSteps,
   });
 
   // Payment hook - manages payment flow
@@ -52,6 +62,7 @@ export default function ChatInterface({ sessionId, phone }: ChatInterfaceProps =
     setPdfDownloaded: session.setPdfDownloaded,
     hasPaid: session.hasPaid,
     attachments: session.attachments,
+    serviceType,
   });
 
   // File upload hook
@@ -129,8 +140,8 @@ export default function ChatInterface({ sessionId, phone }: ChatInterfaceProps =
                 onClick={() => setShowMobileSteps(!showMobileSteps)}
                 className="flex items-center justify-center gap-1.5 text-sm bg-neutral-50 hover:bg-neutral-100 rounded-full px-3 py-1.5 transition-colors"
               >
-                <span className="font-semibold text-neutral-800">{STEPS[chat.currentStep - 1]?.name}</span>
-                <span className="text-neutral-500 font-medium">{chat.currentStep}/{STEPS.length}</span>
+                <span className="font-semibold text-neutral-800">{steps[chat.currentStep - 1]?.name}</span>
+                <span className="text-neutral-500 font-medium">{chat.currentStep}/{steps.length}</span>
                 <ChevronDown className={cn("w-3.5 h-3.5 text-neutral-400 transition-transform", showMobileSteps && "rotate-180")} />
               </button>
             )}
@@ -157,7 +168,7 @@ export default function ChatInterface({ sessionId, phone }: ChatInterfaceProps =
                 className="overflow-hidden"
               >
                 <div className="mt-3 bg-neutral-50 rounded-xl p-3 space-y-2">
-                  {STEPS.map((step) => (
+                  {steps.map((step) => (
                     <div
                       key={step.id}
                       className={cn(
@@ -217,7 +228,7 @@ export default function ChatInterface({ sessionId, phone }: ChatInterfaceProps =
             {/* Center: Steps Progress - Clean with numbers and text */}
             <div className="flex-1 flex items-center justify-center">
               <div className="flex items-center gap-0">
-                {STEPS.map((step, index) => (
+                {steps.map((step, index) => (
                   <div key={step.id} className="flex items-center">
                     <div className="flex flex-col items-center">
                       <div
@@ -243,7 +254,7 @@ export default function ChatInterface({ sessionId, phone }: ChatInterfaceProps =
                         {step.name}
                       </span>
                     </div>
-                    {index < STEPS.length - 1 && (
+                    {index < steps.length - 1 && (
                       <div className={cn(
                         "w-10 h-[2px] mx-1.5 mt-[-14px]",
                         chat.currentStep > step.id ? "bg-emerald-500" : "bg-neutral-200"

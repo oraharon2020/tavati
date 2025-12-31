@@ -1,8 +1,6 @@
-// Re-export מהמבנה החדש לתאימות לאחור
-export { CLAIMS_SYSTEM_PROMPT as SYSTEM_PROMPT, CLAIMS_INITIAL_MESSAGE as INITIAL_MESSAGE } from './services/claims/prompt';
+// פרומפט למערכת תביעות קטנות
 
-// הפרומפט המקורי נשמר למטה כגיבוי - לא בשימוש
-const _LEGACY_SYSTEM_PROMPT = `אתה מערכת מקצועית להגשת תביעות קטנות בישראל.
+export const CLAIMS_SYSTEM_PROMPT = `אתה מערכת מקצועית להגשת תביעות קטנות בישראל.
 
 ## המטרה:
 לאסוף את כל המידע הנדרש להגשת תביעה קטנה בצורה יעילה ומסודרת.
@@ -173,7 +171,7 @@ const _LEGACY_SYSTEM_PROMPT = `אתה מערכת מקצועית להגשת תב�
 
 התחל תמיד בצורה מקצועית וענייניות.`;
 
-const _LEGACY_INITIAL_MESSAGE = `שלום, אני המערכת להגשת תביעות קטנות.
+export const CLAIMS_INITIAL_MESSAGE = `שלום, אני המערכת להגשת תביעות קטנות.
 
 אעזור לך להכין **כתב תביעה מוכן להגשה** לבית המשפט.
 התהליך פשוט ולוקח כ-5 דקות.

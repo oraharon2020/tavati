@@ -1,6 +1,6 @@
 import { anthropic } from "@ai-sdk/anthropic";
 import { streamText } from "ai";
-import { SYSTEM_PROMPT } from "@/lib/prompts";
+import { getServicePrompt, ServiceType } from "@/lib/services";
 
 export const maxDuration = 30;
 
@@ -11,7 +11,10 @@ interface MessageContent {
 }
 
 export async function POST(req: Request) {
-  const { messages } = await req.json();
+  const { messages, serviceType = 'claims' } = await req.json();
+  
+  // קבלת הפרומפט המתאים לשירות
+  const systemPrompt = await getServicePrompt(serviceType as ServiceType);
 
   // Convert messages to the format expected by the AI SDK
   const formattedMessages = messages
@@ -52,7 +55,7 @@ export async function POST(req: Request) {
 
   const result = streamText({
     model: anthropic("claude-haiku-4-5-20251001"),
-    system: SYSTEM_PROMPT,
+    system: systemPrompt,
     messages: formattedMessages,
     temperature: 0.7,
   });

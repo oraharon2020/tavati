@@ -5,11 +5,13 @@ import { Suspense } from "react";
 import ChatInterface from "@/components/ChatInterface";
 import PhoneAuth from "@/components/PhoneAuth";
 import { useAuth } from "@/contexts/AuthContext";
+import { ServiceType } from "@/lib/services";
 
 function ChatContent() {
   const { isAuthenticated, phone, login } = useAuth();
   const searchParams = useSearchParams();
   const sessionId = searchParams.get("session");
+  const serviceType = (searchParams.get("service") || "claims") as ServiceType;
 
   const handleAuthenticated = (phoneNumber: string) => {
     login(phoneNumber);
@@ -19,7 +21,7 @@ function ChatContent() {
     return <PhoneAuth onAuthenticated={handleAuthenticated} />;
   }
 
-  return <ChatInterface sessionId={sessionId} phone={phone} />;
+  return <ChatInterface sessionId={sessionId} phone={phone} serviceType={serviceType} />;
 }
 
 export default function ChatPage() {

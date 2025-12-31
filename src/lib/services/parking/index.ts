@@ -1,0 +1,28 @@
+// שירות ערעור על דוח חניה - קונפיגורציה
+
+import { ServiceConfig, Step } from '../index';
+
+export const PARKING_STEPS: Step[] = [
+  { id: 1, name: "פרטיך", icon: "1" },
+  { id: 2, name: "פרטי הדוח", icon: "2" },
+  { id: 3, name: "סיבת הערעור", icon: "3" },
+  { id: 4, name: "ראיות", icon: "4" },
+  { id: 5, name: "סיכום", icon: "5" },
+];
+
+export const PARKING_CONFIG: ServiceConfig = {
+  id: 'parking',
+  name: 'ערעור דוח חניה',
+  nameEnglish: 'Parking Ticket Appeal',
+  description: 'ערער על דוח חניה בקלות ובמהירות',
+  price: 39,
+  icon: '🚗',
+  color: 'emerald',
+  steps: PARKING_STEPS,
+  maxSteps: 5,
+};
+
+// Re-exports
+export { PARKING_SYSTEM_PROMPT, PARKING_INITIAL_MESSAGE } from './prompt';
+export * from './types';
+export { generateParkingAppealHTML } from './pdf-template';

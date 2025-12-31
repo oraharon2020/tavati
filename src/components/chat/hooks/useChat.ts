@@ -3,6 +3,7 @@
 import { useState, useCallback, useMemo, useEffect } from "react";
 import { Message, UploadedFile } from "../types";
 import { ClaimData } from "@/lib/pdfGenerator";
+import { ServiceType } from "@/lib/services";
 
 interface UseChatProps {
   messages: Message[];
@@ -12,6 +13,8 @@ interface UseChatProps {
   uploadedFiles: UploadedFile[];
   setUploadedFiles: React.Dispatch<React.SetStateAction<UploadedFile[]>>;
   claimData: ClaimData | null;
+  serviceType?: ServiceType;
+  maxSteps?: number;
 }
 
 interface UseChatReturn {
@@ -35,6 +38,8 @@ export function useChat({
   uploadedFiles,
   setUploadedFiles,
   claimData,
+  serviceType = 'claims',
+  maxSteps = 8,
 }: UseChatProps): UseChatReturn {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -45,17 +50,18 @@ export function useChat({
     if (!lastAssistantMessage) return 1;
     
     const match = lastAssistantMessage.content.match(/שלב\s*(\d)/);
-    return match ? parseInt(match[1]) : 1;
-  }, [messages]);
+    return match ? Math.min(parseInt(match[1]), maxSteps) : 1;
+  }, [messages, maxSteps]);
 
-  // זיהוי אם התביעה מוכנה (יש JSON בהודעה)
+  // זיהוי אם התביעה/ערעור מוכן (יש JSON בהודעה)
   const extractClaimData = useCallback((content: string): ClaimData | null => {
     const jsonMatch = content.match(/```json\s*([\s\S]*?)\s*```/);
     if (jsonMatch) {
       try {
         const parsed = JSON.parse(jsonMatch[1]);
-        if (parsed.status === "complete" && parsed.claimData) {
-          return parsed.claimData;
+        if (parsed.status === "complete") {
+          // תמיכה גם ב-claimData וגם ב-parkingAppealData
+          return parsed.claimData || parsed.parkingAppealData || null;
         }
       } catch (e) {
         console.error("Failed to parse claim data:", e);
@@ -105,7 +111,7 @@ export function useChat({
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: messagesToSend }),
+        body: JSON.stringify({ messages: messagesToSend, serviceType }),
       });
 
       if (!response.ok) throw new Error("Failed to fetch");

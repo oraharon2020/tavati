@@ -2,8 +2,9 @@
 
 import { useState, useCallback, useEffect } from "react";
 import { ClaimData, generateClaimPDF, PDFAttachment } from "@/lib/pdfGenerator";
-import { BASE_PRICE } from "../constants";
+import { getPriceForService } from "../constants";
 import { AppliedCoupon, Attachment } from "../types";
+import { ServiceType } from "@/lib/services";
 
 interface UsePaymentProps {
   claimData: ClaimData | null;
@@ -13,6 +14,7 @@ interface UsePaymentProps {
   setPdfDownloaded: React.Dispatch<React.SetStateAction<boolean>>;
   hasPaid: boolean;
   attachments?: Attachment[];
+  serviceType?: ServiceType;
 }
 
 interface UsePaymentReturn {
@@ -46,7 +48,10 @@ export function usePayment({
   setPdfDownloaded,
   hasPaid,
   attachments = [],
+  serviceType = 'claims',
 }: UsePaymentProps): UsePaymentReturn {
+  const basePrice = getPriceForService(serviceType);
+  
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
@@ -172,14 +177,14 @@ export function usePayment({
 
   // חישוב מחיר סופי
   const calculateFinalPrice = useCallback(() => {
-    if (!appliedCoupon) return BASE_PRICE;
+    if (!appliedCoupon) return basePrice;
     
     if (appliedCoupon.discount_type === "percentage") {
-      return Math.round(BASE_PRICE * (1 - appliedCoupon.discount_value / 100));
+      return Math.round(basePrice * (1 - appliedCoupon.discount_value / 100));
     } else {
-      return Math.max(0, BASE_PRICE - appliedCoupon.discount_value);
+      return Math.max(0, basePrice - appliedCoupon.discount_value);
     }
-  }, [appliedCoupon]);
+  }, [appliedCoupon, basePrice]);
 
   // תשלום והורדה
   const handlePaymentAndDownload = useCallback(() => {

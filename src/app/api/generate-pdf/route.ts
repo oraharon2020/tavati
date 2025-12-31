@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import puppeteer from "puppeteer";
 import { ClaimData, calculateFee, findCourtByCity, CLAIM_TYPES } from "@/lib/types";
+import { generateParkingAppealHTML, ParkingAppealData } from "@/lib/services/parking";
+import { ServiceType } from "@/lib/services";
 
-function generateHTML(data: ClaimData): string {
+function generateClaimHTML(data: ClaimData): string {
   const today = new Date().toLocaleDateString("he-IL");
   const fee = calculateFee(data.claim.amount);
   
@@ -465,9 +467,33 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     
-    // Support both old format (data directly) and new format ({ claimData, attachments })
-    const data: ClaimData = body.claimData || body;
+    // Detect service type
+    const serviceType: ServiceType = body.serviceType || 
+      (body.parkingAppealData ? 'parking' : 'claims');
+    
+    // Support both old format (data directly) and new format
     const attachments: PDFAttachment[] = body.attachments || [];
+    
+    let html: string;
+    let filename: string;
+    
+    if (serviceType === 'parking') {
+      // Parking appeal
+      const data: ParkingAppealData = body.parkingAppealData || body.claimData || body;
+      html = generateParkingAppealHTML(data);
+      filename = `parking-appeal-${data.ticket?.ticketNumber || 'document'}.pdf`;
+    } else {
+      // Small claims (default)
+      const data: ClaimData = body.claimData || body;
+      html = generateClaimHTML(data);
+      filename = 'claim.pdf';
+      
+      // If there are attachments, add them before closing </body>
+      if (attachments.length > 0) {
+        const attachmentsHtml = generateAttachmentsHTML(attachments);
+        html = html.replace('</body>', `${attachmentsHtml}</body>`);
+      }
+    }
     
     const browser = await puppeteer.launch({
       headless: true,
@@ -475,15 +501,6 @@ export async function POST(request: NextRequest) {
     });
     
     const page = await browser.newPage();
-    
-    // Generate main claim HTML
-    let html = generateHTML(data);
-    
-    // If there are attachments, add them before closing </body>
-    if (attachments.length > 0) {
-      const attachmentsHtml = generateAttachmentsHTML(attachments);
-      html = html.replace('</body>', `${attachmentsHtml}</body>`);
-    }
     
     await page.setContent(html, { waitUntil: 'networkidle0' });
     
@@ -510,7 +527,7 @@ export async function POST(request: NextRequest) {
     return new NextResponse(Buffer.from(pdfBuffer), {
       headers: {
         'Content-Type': 'application/pdf',
-        'Content-Disposition': `attachment; filename="claim.pdf"`,
+        'Content-Disposition': `attachment; filename="${filename}"`,
       },
     });
   } catch (error) {
