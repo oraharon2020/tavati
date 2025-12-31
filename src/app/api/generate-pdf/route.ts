@@ -467,9 +467,18 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     
-    // Detect service type
-    const serviceType: ServiceType = body.serviceType || 
-      (body.parkingAppealData ? 'parking' : 'claims');
+    // Detect service type - from explicit param or by inspecting data structure
+    let serviceType: ServiceType = body.serviceType;
+    
+    if (!serviceType) {
+      // Auto-detect based on data structure
+      const data = body.parkingAppealData || body.claimData || body;
+      if (data.appellant && data.ticket) {
+        serviceType = 'parking';
+      } else {
+        serviceType = 'claims';
+      }
+    }
     
     // Support both old format (data directly) and new format
     const attachments: PDFAttachment[] = body.attachments || [];

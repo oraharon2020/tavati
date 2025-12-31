@@ -1,6 +1,7 @@
 "use client";
 
 import { ClaimData, calculateFee } from "./types";
+import { ServiceType } from "./services";
 
 // Re-export הטיפוסים לשימוש ברכיבים אחרים
 export type { ClaimData } from "./types";
@@ -11,15 +12,41 @@ export interface PDFAttachment {
   type: string;
 }
 
+// Helper to detect data type and extract info
+function getDataInfo(data: unknown): { serviceType: ServiceType; filename: string } {
+  const d = data as Record<string, unknown>;
+  
+  // Check if it's parking data (has appellant instead of plaintiff)
+  if (d.appellant && d.ticket) {
+    const ticket = d.ticket as Record<string, unknown>;
+    const appellant = d.appellant as Record<string, unknown>;
+    return {
+      serviceType: 'parking',
+      filename: `ערעור_חניה_${ticket.ticketNumber || 'document'}_${(appellant.fullName as string || '').replace(/\s/g, '_')}.pdf`
+    };
+  }
+  
+  // Default to claims
+  const plaintiff = d.plaintiff as Record<string, unknown> | undefined;
+  const defendant = d.defendant as Record<string, unknown> | undefined;
+  return {
+    serviceType: 'claims',
+    filename: `כתב_תביעה_${plaintiff?.fullName || ''}_נגד_${defendant?.name || ''}.pdf`.replace(/\s/g, "_")
+  };
+}
+
 // פונקציה להורדת ה-PDF - קוראת ל-API שמייצר PDF עם Puppeteer
-export async function generateClaimPDF(data: ClaimData, attachments?: PDFAttachment[]): Promise<void> {
+export async function generateClaimPDF(data: ClaimData | unknown, attachments?: PDFAttachment[]): Promise<void> {
+  const { serviceType, filename } = getDataInfo(data);
+  
   const response = await fetch('/api/generate-pdf', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({ 
-      claimData: data, 
+      claimData: data,
+      serviceType,
       attachments: attachments || [] 
     }),
   });
@@ -39,7 +66,7 @@ export async function generateClaimPDF(data: ClaimData, attachments?: PDFAttachm
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
-  link.download = `כתב_תביעה_${data.plaintiff.fullName}_נגד_${data.defendant.name}.pdf`.replace(/\s/g, "_");
+  link.download = filename;
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
