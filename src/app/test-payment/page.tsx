@@ -52,9 +52,10 @@ export default function TestPaymentPage() {
       });
       const data = await res.json();
       
-      if (data.url) {
-        setResult(`Opening payment: ${data.url}`);
-        window.open(data.url, "_blank");
+      if (data.paymentUrl || data.url) {
+        const url = data.paymentUrl || data.url;
+        setResult(`Opening payment: ${url}`);
+        window.open(url, "_blank");
       } else {
         setResult(`Error: ${JSON.stringify(data)}`);
       }
