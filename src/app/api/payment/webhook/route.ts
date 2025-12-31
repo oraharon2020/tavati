@@ -127,7 +127,7 @@ export async function POST(req: NextRequest) {
     if (isSuccess) {
       // Update session as paid
       const { error: updateError } = await supabase
-        .from("sessions")
+        .from("chat_sessions")
         .update({
           status: 'paid',
           payment_data: {
