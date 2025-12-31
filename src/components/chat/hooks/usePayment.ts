@@ -151,11 +151,20 @@ export function usePayment({
       
       const data = await res.json();
       
-      if (res.ok && data.valid) {
+      if (res.ok && data.valid && data.coupon) {
+        const { code, discountType, discountValue } = data.coupon;
+        
+        // Validate coupon data
+        if (!discountType || discountValue === undefined || discountValue === null) {
+          setCouponError("נתוני קופון לא תקינים");
+          setAppliedCoupon(null);
+          return;
+        }
+        
         setAppliedCoupon({
-          code: data.coupon.code,
-          discount_type: data.coupon.discount_type,
-          discount_value: data.coupon.discount_value,
+          code,
+          discount_type: discountType,
+          discount_value: Number(discountValue),
         });
         setCouponError("");
       } else {
@@ -177,12 +186,16 @@ export function usePayment({
 
   // חישוב מחיר סופי
   const calculateFinalPrice = useCallback(() => {
-    if (!appliedCoupon) return basePrice;
+    if (!appliedCoupon || !appliedCoupon.discount_type || appliedCoupon.discount_value === undefined) {
+      return basePrice;
+    }
+    
+    const discountValue = Number(appliedCoupon.discount_value) || 0;
     
     if (appliedCoupon.discount_type === "percentage") {
-      return Math.round(basePrice * (1 - appliedCoupon.discount_value / 100));
+      return Math.round(basePrice * (1 - discountValue / 100));
     } else {
-      return Math.max(0, basePrice - appliedCoupon.discount_value);
+      return Math.max(0, basePrice - discountValue);
     }
   }, [appliedCoupon, basePrice]);
 
@@ -202,6 +215,14 @@ export function usePayment({
     setIsProcessingPayment(true);
     
     try {
+      // Get customer details - support both claims (plaintiff) and parking (appellant)
+      const customer = (claimData as { plaintiff?: { fullName: string; phone: string; email?: string }; appellant?: { fullName: string; phone: string; email?: string } }).plaintiff 
+        || (claimData as { appellant?: { fullName: string; phone: string; email?: string } }).appellant;
+      
+      if (!customer) {
+        throw new Error("חסרים פרטי לקוח");
+      }
+      
       // יצירת דף תשלום ב-Grow/משולם
       const response = await fetch("/api/payment/create", {
         method: "POST",
@@ -209,10 +230,10 @@ export function usePayment({
         body: JSON.stringify({
           sessionId: currentSessionId,
           amount: calculateFinalPrice(),
-          description: "כתב תביעה - תבעתי",
-          customerName: claimData.plaintiff.fullName,
-          customerPhone: claimData.plaintiff.phone,
-          customerEmail: claimData.plaintiff.email || undefined,
+          description: serviceType === 'parking' ? "ערעור דוח חניה - תבעתי" : "כתב תביעה - תבעתי",
+          customerName: customer.fullName,
+          customerPhone: customer.phone,
+          customerEmail: customer.email || undefined,
         }),
       });
 
@@ -241,7 +262,7 @@ export function usePayment({
       setIsProcessingPayment(false);
       return null;
     }
-  }, [claimData, currentSessionId, calculateFinalPrice]);
+  }, [claimData, currentSessionId, calculateFinalPrice, serviceType]);
 
   const handleGeneratePDF = useCallback(async (withAttachments: boolean = false) => {
     if (!claimData) return;

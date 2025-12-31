@@ -303,6 +303,7 @@ export default function ChatInterface({ sessionId, phone, serviceType = 'claims'
         onValidateCoupon={payment.validateCoupon}
         onRemoveCoupon={payment.removeCoupon}
         calculateFinalPrice={payment.calculateFinalPrice}
+        basePrice={price}
       />
 
       {/* Preview Modal */}

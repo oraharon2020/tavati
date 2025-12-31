@@ -2,9 +2,8 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { CreditCard, CheckCircle2, Shield, Loader2, Tag } from "lucide-react";
+import { CreditCard, CheckCircle2, Shield, Loader2, Tag, X } from "lucide-react";
 import { AppliedCoupon } from "./types";
-import { BASE_PRICE } from "./constants";
 
 interface PaymentModalProps {
   isOpen: boolean;
@@ -22,6 +21,7 @@ interface PaymentModalProps {
   onValidateCoupon: () => void;
   onRemoveCoupon: () => void;
   calculateFinalPrice: () => number;
+  basePrice: number;
 }
 
 export default function PaymentModal({
@@ -40,6 +40,7 @@ export default function PaymentModal({
   onValidateCoupon,
   onRemoveCoupon,
   calculateFinalPrice,
+  basePrice,
 }: PaymentModalProps) {
   const [paymentLoading, setPaymentLoading] = useState(false);
 
@@ -87,7 +88,7 @@ export default function PaymentModal({
   };
 
   const handleClose = () => {
-    if (typeof window !== 'undefined' && window.growPayment) {
+    if (typeof window !== 'undefined' && window.growPayment && typeof window.growPayment.close === 'function') {
       window.growPayment.close();
     }
     onClose();
@@ -107,9 +108,21 @@ export default function PaymentModal({
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.9, opacity: 0 }}
-            className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6"
+            className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 relative"
             onClick={(e) => e.stopPropagation()}
           >
+            {/* Close X button */}
+            {!isProcessing && !paymentLoading && (
+              <button
+                type="button"
+                onClick={handleClose}
+                className="absolute top-4 left-4 p-2 text-neutral-400 hover:text-neutral-600 hover:bg-neutral-100 rounded-full transition-colors"
+                aria-label="סגור"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            )}
+
             {/* Header */}
             <div className="text-center mb-6">
               <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-blue-500 to-emerald-500 rounded-2xl flex items-center justify-center">
@@ -123,7 +136,7 @@ export default function PaymentModal({
             <div className="bg-gradient-to-br from-blue-50 to-emerald-50 rounded-xl p-4 mb-4 text-center border border-blue-100">
               {appliedCoupon ? (
                 <>
-                  <div className="text-lg text-neutral-400 line-through">₪{BASE_PRICE}</div>
+                  <div className="text-lg text-neutral-400 line-through">₪{basePrice}</div>
                   <div className="text-3xl font-bold text-emerald-600">₪{calculateFinalPrice()}</div>
                   <div className="text-sm text-emerald-600 flex items-center justify-center gap-1 mt-1">
                     <Tag className="w-3 h-3" />
@@ -135,7 +148,7 @@ export default function PaymentModal({
                 </>
               ) : (
                 <>
-                  <div className="text-3xl font-bold text-blue-600">₪{BASE_PRICE}</div>
+                  <div className="text-3xl font-bold text-blue-600">₪{basePrice}</div>
                   <div className="text-sm text-neutral-500">תשלום חד פעמי</div>
                 </>
               )}
@@ -234,10 +247,11 @@ export default function PaymentModal({
             </button>
 
             {/* Cancel */}
-            {!isProcessing && (
+            {!isProcessing && !paymentLoading && (
               <button
                 onClick={handleClose}
                 className="w-full mt-3 py-2 text-neutral-500 hover:text-neutral-700 text-sm"
+                type="button"
               >
                 ביטול
               </button>

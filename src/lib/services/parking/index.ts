@@ -5,9 +5,8 @@ import { ServiceConfig, Step } from '../index';
 export const PARKING_STEPS: Step[] = [
   { id: 1, name: "פרטיך", icon: "1" },
   { id: 2, name: "פרטי הדוח", icon: "2" },
-  { id: 3, name: "סיבת הערעור", icon: "3" },
-  { id: 4, name: "ראיות", icon: "4" },
-  { id: 5, name: "סיכום", icon: "5" },
+  { id: 3, name: "סיבה וראיות", icon: "3" },
+  { id: 4, name: "סיכום", icon: "4" },
 ];
 
 export const PARKING_CONFIG: ServiceConfig = {
@@ -19,7 +18,7 @@ export const PARKING_CONFIG: ServiceConfig = {
   icon: '🚗',
   color: 'emerald',
   steps: PARKING_STEPS,
-  maxSteps: 5,
+  maxSteps: 4,
 };
 
 // Re-exports
