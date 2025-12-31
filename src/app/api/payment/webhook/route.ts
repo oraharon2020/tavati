@@ -43,25 +43,47 @@ export async function POST(req: NextRequest) {
     
     // Parse form data (Grow sends as form-urlencoded)
     const contentType = req.headers.get("content-type") || "";
-    let data: Record<string, string> = {};
+    let rawData: Record<string, string> = {};
     
     if (contentType.includes("application/x-www-form-urlencoded") || contentType.includes("multipart/form-data")) {
       const formData = await req.formData();
       formData.forEach((value, key) => {
-        data[key] = value.toString();
+        rawData[key] = value.toString();
       });
     } else {
-      data = await req.json();
+      rawData = await req.json();
     }
     
-    console.log("Payment webhook received:", JSON.stringify(data, null, 2));
+    console.log("Payment webhook received:", JSON.stringify(rawData, null, 2));
+
+    // Parse Grow webhook format - they send data as "data[fieldName]" format
+    // Convert to flat object for easier access
+    const data: Record<string, string> = {};
+    for (const [key, value] of Object.entries(rawData)) {
+      // Handle "data[fieldName]" format
+      const match = key.match(/^data\[(.+?)\]$/);
+      if (match) {
+        data[match[1]] = value;
+      } else if (key.startsWith('data[customFields]')) {
+        // Handle nested "data[customFields][cField1]" format
+        const cfMatch = key.match(/^data\[customFields\]\[(.+?)\]$/);
+        if (cfMatch) {
+          data[cfMatch[1]] = value;
+        }
+      } else {
+        // Regular field
+        data[key] = value;
+      }
+    }
+    
+    console.log("Parsed webhook data:", JSON.stringify(data, null, 2));
 
     // Extract fields from Grow webhook
     // See: https://grow-il.readme.io/reference/server-response
     const {
       transactionId,        // מזהה העסקה
       transactionToken,     // טוקן העסקה
-      TransactionTypeId,    // סוג תשלום (1=כרטיס, 6=ביט, 13=אפל פיי, 14=גוגל פיי)
+      transactionTypeId,    // סוג תשלום (1=כרטיס, 6=ביט, 13=אפל פיי, 14=גוגל פיי)
       processId,            // מזהה התהליך
       processToken,         // טוקן התהליך
       asmachta,             // אסמכתא
@@ -79,7 +101,7 @@ export async function POST(req: NextRequest) {
       periodicalPaymentSum, // סכום תשלום תקופתי
       paymentDate,          // תאריך תשלום
       description,          // תיאור
-      status,               // סטטוס (1 = הצלחה)
+      status,               // סטטוס (1 = הצלחה) - Note: this comes from rawData directly
       statusCode,           // קוד סטטוס
       fullName,             // שם הלקוח
       payerPhone,           // טלפון
@@ -89,6 +111,9 @@ export async function POST(req: NextRequest) {
 
     // Extract session_id from custom fields
     const sessionId = cField1;
+    
+    // Get status from rawData (it's not nested under data[])
+    const paymentStatus = rawData.status || status;
 
     if (!sessionId) {
       console.error("No session_id (cField1) in webhook payload");
@@ -97,7 +122,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Check if payment was successful (status = 1 or "1")
-    const isSuccess = status === "1" || String(status) === "1";
+    const isSuccess = paymentStatus === "1" || String(paymentStatus) === "1";
 
     if (isSuccess) {
       // Update session as paid

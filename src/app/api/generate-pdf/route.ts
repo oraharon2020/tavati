@@ -97,13 +97,6 @@ function generateClaimHTML(data: ClaimData): string {
     @page {
       size: A4;
       margin: 20mm 15mm 25mm 15mm;
-      
-      @bottom-center {
-        content: "עמוד " counter(page) " מתוך " counter(pages);
-        font-family: 'Rubik', 'David', sans-serif;
-        font-size: 9pt;
-        color: #666;
-      }
     }
     
     body {
@@ -114,17 +107,6 @@ function generateClaimHTML(data: ClaimData): string {
       text-align: right;
       color: #000;
       background: #fff;
-      counter-reset: page;
-    }
-    
-    .page-number {
-      position: fixed;
-      bottom: 10mm;
-      left: 0;
-      right: 0;
-      text-align: center;
-      font-size: 9pt;
-      color: #666;
     }
     
     .header {
