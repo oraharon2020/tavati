@@ -24,8 +24,12 @@ export async function POST(req: NextRequest) {
     const supabase = getSupabase();
     
     if (!supabase) {
-      console.error("Supabase not configured");
-      return NextResponse.json({ error: "Server configuration error" }, { status: 500 });
+      console.error("Webhook error: SUPABASE_SERVICE_ROLE_KEY is not configured in environment variables");
+      // Return success to Grow to prevent retries, but log the error
+      return NextResponse.json({ 
+        status: 1, 
+        message: "Webhook received but database not configured" 
+      });
     }
     
     // Parse form data (Grow sends as form-urlencoded)
