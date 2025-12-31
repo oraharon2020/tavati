@@ -1,28 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Loader2 } from "lucide-react";
 import Script from "next/script";
-
-declare global {
-  interface Window {
-    growPayment?: {
-      submit: (options: {
-        PageCode: string;
-        UserId: string;
-        Sum: number;
-        Description: string;
-        FullName: string;
-        Phone: string;
-        Email: string;
-        cField1?: string;
-        SuccessUrl?: string;
-        CancelUrl?: string;
-      }) => void;
-      close?: () => void;
-    };
-  }
-}
 
 export default function TestPaymentPage() {
   const [sessionId, setSessionId] = useState("");
