@@ -51,6 +51,7 @@ interface Claim {
   updatedAt: string;
   claimType: string;
   claimData: ClaimData;
+  serviceType: "claims" | "parking";
 }
 
 export default function MyAreaPage() {
@@ -86,20 +87,31 @@ export default function MyAreaPage() {
           current_step?: number;
           created_at?: string;
           updated_at?: string;
-        }) => ({
-          id: session.id,
-          title: session.claim_data?.claim?.type ? getClaimTypeTitle(session.claim_data.claim.type) : "תביעה חדשה",
-          defendant: session.claim_data?.defendant?.name || "לא צוין",
-          defendantType: session.claim_data?.defendant?.type || "unknown",
-          plaintiff: session.claim_data?.plaintiff?.fullName || "לא צוין",
-          amount: session.claim_data?.claim?.amount || 0,
-          status: session.status || "draft",
-          currentStep: session.current_step || 1,
-          createdAt: session.created_at || new Date().toISOString(),
-          updatedAt: session.updated_at || new Date().toISOString(),
-          claimType: session.claim_data?.claim?.type || "other",
-          claimData: session.claim_data || {},
-        }));
+          service_type?: string;
+        }) => {
+          const serviceType = (session.service_type || 'claims') as "claims" | "parking";
+          const isParking = serviceType === 'parking';
+          
+          return {
+            id: session.id,
+            title: isParking 
+              ? "ערעור על דוח חניה"
+              : (session.claim_data?.claim?.type ? getClaimTypeTitle(session.claim_data.claim.type) : "תביעה חדשה"),
+            defendant: isParking 
+              ? (session.claim_data as Record<string, string>)?.authority || "לא צוין"
+              : session.claim_data?.defendant?.name || "לא צוין",
+            defendantType: session.claim_data?.defendant?.type || "unknown",
+            plaintiff: session.claim_data?.plaintiff?.fullName || "לא צוין",
+            amount: session.claim_data?.claim?.amount || 0,
+            status: session.status || "draft",
+            currentStep: session.current_step || 1,
+            createdAt: session.created_at || new Date().toISOString(),
+            updatedAt: session.updated_at || new Date().toISOString(),
+            claimType: session.claim_data?.claim?.type || "other",
+            claimData: session.claim_data || {},
+            serviceType,
+          };
+        });
         setClaims(claimsList);
       }
     } catch (error) {
@@ -318,6 +330,15 @@ export default function MyAreaPage() {
                       <div className="flex-1 min-w-0">
                         {/* Title & Status */}
                         <div className="flex flex-wrap items-center gap-2 mb-3">
+                          {/* Service Type Badge */}
+                          <span className={cn(
+                            "inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide",
+                            claim.serviceType === 'parking' 
+                              ? "bg-teal-100 text-teal-700" 
+                              : "bg-blue-100 text-blue-700"
+                          )}>
+                            {claim.serviceType === 'parking' ? '🅿️ חניה' : '⚖️ תביעה'}
+                          </span>
                           <h3 className="font-bold text-lg text-neutral-900">{claim.title}</h3>
                           <span className={cn(
                             "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border",

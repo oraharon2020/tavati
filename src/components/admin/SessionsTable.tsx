@@ -14,6 +14,7 @@ interface Session {
   defendant?: string;
   amount?: number;
   plaintiff?: string;
+  serviceType?: "claims" | "parking";
 }
 
 interface SessionsTableProps {
@@ -138,6 +139,7 @@ export default function SessionsTable({ sessions }: SessionsTableProps) {
         <table className="w-full">
           <thead className="bg-neutral-50">
             <tr>
+              <th className="text-right px-4 py-3 text-xs font-medium text-neutral-500 uppercase">שירות</th>
               <th className="text-right px-4 py-3 text-xs font-medium text-neutral-500 uppercase">טלפון</th>
               <th className="text-right px-4 py-3 text-xs font-medium text-neutral-500 uppercase">תובע</th>
               <th className="text-right px-4 py-3 text-xs font-medium text-neutral-500 uppercase">נתבע</th>
@@ -152,6 +154,15 @@ export default function SessionsTable({ sessions }: SessionsTableProps) {
           <tbody className="divide-y divide-neutral-100">
             {filteredSessions.map((session) => (
               <tr key={session.id} className="hover:bg-neutral-50 transition-colors">
+                <td className="px-4 py-3">
+                  <span className={`px-2 py-1 rounded text-[10px] font-bold ${
+                    session.serviceType === 'parking' 
+                      ? 'bg-teal-100 text-teal-700' 
+                      : 'bg-blue-100 text-blue-700'
+                  }`}>
+                    {session.serviceType === 'parking' ? '🅿️ חניה' : '⚖️ תביעה'}
+                  </span>
+                </td>
                 <td className="px-4 py-3 font-mono text-sm text-neutral-900">{session.phone}</td>
                 <td className="px-4 py-3 text-sm text-neutral-700">{session.plaintiff || "-"}</td>
                 <td className="px-4 py-3 text-sm text-neutral-700 max-w-[150px] truncate" title={session.defendant}>{session.defendant || "-"}</td>
@@ -160,11 +171,11 @@ export default function SessionsTable({ sessions }: SessionsTableProps) {
                   {session.amount ? `₪${session.amount.toLocaleString()}` : "-"}
                 </td>
                 <td className="px-4 py-3">{getStatusBadge(session.status)}</td>
-                <td className="px-4 py-3 text-sm text-neutral-500">{session.currentStep}/8</td>
+                <td className="px-4 py-3 text-sm text-neutral-500">{session.currentStep}/{session.serviceType === 'parking' ? 5 : 8}</td>
                 <td className="px-4 py-3 text-sm text-neutral-500">{formatDate(session.createdAt)}</td>
                 <td className="px-4 py-3">
                   <a 
-                    href={`/chat?session=${session.id}`}
+                    href={`/chat?session=${session.id}${session.serviceType === 'parking' ? '&service=parking' : ''}`}
                     target="_blank"
                     className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 text-sm"
                   >
@@ -176,7 +187,7 @@ export default function SessionsTable({ sessions }: SessionsTableProps) {
             ))}
             {filteredSessions.length === 0 && (
               <tr>
-                <td colSpan={9} className="px-4 py-8 text-center text-neutral-500">
+                <td colSpan={10} className="px-4 py-8 text-center text-neutral-500">
                   {search || statusFilter !== "all" ? "לא נמצאו תוצאות" : "אין תביעות עדיין"}
                 </td>
               </tr>

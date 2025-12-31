@@ -409,7 +409,7 @@ ${formData.isOwner === "true" ? "בעל הרכב הרשום" : "נהג (לא ב�
               className="w-4 h-4 text-emerald-600"
               disabled={disabled}
             />
-            <span className="text-sm">כן, אני בעל הרכב</span>
+            <span className="text-sm text-gray-700">כן, אני בעל הרכב</span>
           </label>
           <label className="flex items-center gap-2 cursor-pointer">
             <input
@@ -421,7 +421,7 @@ ${formData.isOwner === "true" ? "בעל הרכב הרשום" : "נהג (לא ב�
               className="w-4 h-4 text-emerald-600"
               disabled={disabled}
             />
-            <span className="text-sm">לא, אני הנהג בלבד</span>
+            <span className="text-sm text-gray-700">לא, אני הנהג בלבד</span>
           </label>
         </div>
       </div>

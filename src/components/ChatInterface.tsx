@@ -360,9 +360,9 @@ export default function ChatInterface({ sessionId, phone, serviceType = 'claims'
         />
       </main>
 
-      {/* Quick Actions (only on welcome) */}
-      {session.showWelcome && session.messages.length === 1 && (
-        <ChatWelcome onQuickAction={chat.handleQuickAction} />
+      {/* Quick Actions (only on welcome, only for claims) */}
+      {serviceType === 'claims' && session.showWelcome && session.messages.length === 1 && (
+        <ChatWelcome onQuickAction={chat.handleQuickAction} serviceType={serviceType} />
       )}
 
       {/* Input Area */}

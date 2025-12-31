@@ -80,6 +80,7 @@ export async function GET() {
         defendant: s.claim_data?.defendant?.name || "",
         amount: s.claim_data?.claim?.amount || 0,
         plaintiff: s.claim_data?.plaintiff?.fullName || "",
+        serviceType: s.service_type || "claims",
       })),
     });
   } catch (error) {

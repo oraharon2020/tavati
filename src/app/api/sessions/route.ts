@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
 // Create new session
 export async function POST(request: NextRequest) {
   try {
-    const { phone } = await request.json();
+    const { phone, serviceType = 'claims' } = await request.json();
 
     if (!phone) {
       return NextResponse.json(
@@ -57,6 +57,7 @@ export async function POST(request: NextRequest) {
         current_step: 1,
         status: "draft",
         claim_data: {},
+        service_type: serviceType,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       })
