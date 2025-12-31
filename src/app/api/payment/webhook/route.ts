@@ -6,6 +6,13 @@ const MESHULAM_API_URL = process.env.MESHULAM_API_URL || "https://sandbox.meshul
 const MESHULAM_PAGE_CODE = process.env.MESHULAM_PAGE_CODE || "";
 const MESHULAM_USER_ID = process.env.MESHULAM_USER_ID || "";
 
+// Log config on startup (without sensitive values)
+console.log("[Webhook] Config loaded:", {
+  API_URL: MESHULAM_API_URL,
+  PAGE_CODE_SET: !!MESHULAM_PAGE_CODE,
+  USER_ID_SET: !!MESHULAM_USER_ID,
+});
+
 // Create supabase client only when keys are available
 const getSupabase = () => {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -20,6 +27,8 @@ const getSupabase = () => {
 
 // Webhook endpoint for Grow/Meshulam payment notifications (Server-to-Server callback)
 export async function POST(req: NextRequest) {
+  console.log("[Webhook] ====== RECEIVED PAYMENT WEBHOOK ======");
+  
   try {
     const supabase = getSupabase();
     
@@ -51,22 +60,30 @@ export async function POST(req: NextRequest) {
     // See: https://grow-il.readme.io/reference/server-response
     const {
       transactionId,        // מזהה העסקה
+      transactionToken,     // טוקן העסקה
+      TransactionTypeId,    // סוג תשלום (1=כרטיס, 6=ביט, 13=אפל פיי, 14=גוגל פיי)
       processId,            // מזהה התהליך
       processToken,         // טוקן התהליך
       asmachta,             // אסמכתא
       cardSuffix,           // 4 ספרות אחרונות
       cardType,             // סוג כרטיס
+      cardTypeCode,         // קוד סוג כרטיס
       cardBrand,            // מותג כרטיס (visa/mastercard)
-      paymentType,          // סוג תשלום (credit/bit/applepay/googlepay)
+      cardBrandCode,        // קוד מותג כרטיס
+      cardExp,              // תוקף כרטיס
+      paymentType,          // סוג תשלום (1=רגיל, 2=תשלומים, 4=הוראת קבע)
       sum,                  // סכום
-      paymentsNum,          // מספר תשלומים
+      paymentsNum,          // מספר תשלום נוכחי
+      allPaymentsNum,       // סה"כ תשלומים
       firstPaymentSum,      // סכום תשלום ראשון
       periodicalPaymentSum, // סכום תשלום תקופתי
+      paymentDate,          // תאריך תשלום
+      description,          // תיאור
       status,               // סטטוס (1 = הצלחה)
       statusCode,           // קוד סטטוס
       fullName,             // שם הלקוח
-      phone,                // טלפון
-      email,                // אימייל
+      payerPhone,           // טלפון
+      payerEmail,           // אימייל
       cField1,              // שדה מותאם 1 (session_id)
     } = data;
 
@@ -90,18 +107,27 @@ export async function POST(req: NextRequest) {
           status: 'paid',
           payment_data: {
             transaction_id: transactionId,
+            transaction_token: transactionToken,
             process_id: processId,
             process_token: processToken,
             asmachta: asmachta,
             amount: parseFloat(sum) || 0,
             card_suffix: cardSuffix,
             card_type: cardType,
+            card_type_code: cardTypeCode,
             card_brand: cardBrand,
+            card_brand_code: cardBrandCode,
+            card_exp: cardExp,
             payment_type: paymentType,
             payments_num: parseInt(paymentsNum) || 1,
+            all_payments_num: parseInt(allPaymentsNum) || 1,
+            first_payment_sum: firstPaymentSum,
+            periodical_payment_sum: periodicalPaymentSum,
+            payment_date: paymentDate,
+            description: description,
             customer_name: fullName,
-            customer_phone: phone,
-            customer_email: email,
+            customer_phone: payerPhone,
+            customer_email: payerEmail,
             paid_at: new Date().toISOString(),
           },
           updated_at: new Date().toISOString(),
@@ -118,10 +144,11 @@ export async function POST(req: NextRequest) {
       // Call approve endpoint to confirm we received the webhook
       // This is required by Grow - must send all webhook data back
       try {
+        console.log(`[Webhook] Calling approveTransaction for transactionId: ${transactionId}`);
         await approveTransaction(data);
-        console.log(`Transaction ${transactionId} approved`);
+        console.log(`[Webhook] Transaction ${transactionId} approved successfully!`);
       } catch (approveError) {
-        console.error("Error approving transaction:", approveError);
+        console.error("[Webhook] Error approving transaction:", approveError);
         // Don't fail the webhook even if approve fails
       }
     } else {
@@ -146,32 +173,39 @@ async function approveTransaction(webhookData: Record<string, string>) {
   formData.append("pageCode", MESHULAM_PAGE_CODE);
   formData.append("userId", MESHULAM_USER_ID);
   
-  // All required fields from webhook data
+  // All required fields from webhook data - use exact field names from Grow
   formData.append("transactionId", webhookData.transactionId || "");
   formData.append("transactionToken", webhookData.transactionToken || "");
-  formData.append("transactionTypeId", webhookData.transactionTypeId || "1"); // 1=Credit, 6=Bit, 13=Apple Pay, 14=Google Pay
-  formData.append("paymentType", webhookData.paymentType || "1"); // 1=Direct, 2=Regular, 4=Payments
+  formData.append("transactionTypeId", webhookData.TransactionTypeId || webhookData.transactionTypeId || "1");
+  formData.append("paymentType", webhookData.paymentType || "1");
   formData.append("sum", webhookData.sum || "0");
   formData.append("firstPaymentSum", webhookData.firstPaymentSum || webhookData.sum || "0");
   formData.append("periodicalPaymentSum", webhookData.periodicalPaymentSum || "0");
   formData.append("paymentsNum", webhookData.paymentsNum || "1");
   formData.append("allPaymentsNum", webhookData.allPaymentsNum || webhookData.paymentsNum || "1");
-  formData.append("paymentDate", webhookData.paymentDate || new Date().toISOString().split('T')[0]);
+  formData.append("paymentDate", webhookData.paymentDate || new Date().toLocaleDateString('en-GB').replace(/\//g, '/'));
   formData.append("asmachta", webhookData.asmachta || "");
   formData.append("description", webhookData.description || "תביעה קטנה - tavati.app");
   formData.append("fullName", webhookData.fullName || "");
-  formData.append("payerPhone", webhookData.phone || webhookData.payerPhone || "");
-  formData.append("payerEmail", webhookData.email || webhookData.payerEmail || "");
+  formData.append("payerPhone", webhookData.payerPhone || "");
+  formData.append("payerEmail", webhookData.payerEmail || "");
   formData.append("cardSuffix", webhookData.cardSuffix || "");
   formData.append("cardType", webhookData.cardType || "");
   formData.append("cardTypeCode", webhookData.cardTypeCode || "1");
   formData.append("cardBrand", webhookData.cardBrand || "");
-  formData.append("cardBrandCode", webhookData.cardBrandCode || "3"); // Default to Visa
+  formData.append("cardBrandCode", webhookData.cardBrandCode || "3");
   formData.append("cardExp", webhookData.cardExp || "");
   formData.append("processId", webhookData.processId || "");
   formData.append("processToken", webhookData.processToken || "");
 
-  console.log("Sending approveTransaction with data:", Object.fromEntries(formData.entries()));
+  console.log("[Webhook] Sending approveTransaction with pageCode:", MESHULAM_PAGE_CODE ? "SET" : "MISSING");
+  console.log("[Webhook] Sending approveTransaction with userId:", MESHULAM_USER_ID ? "SET" : "MISSING");
+  console.log("[Webhook] approveTransaction data:", {
+    transactionId: webhookData.transactionId,
+    processId: webhookData.processId,
+    sum: webhookData.sum,
+    asmachta: webhookData.asmachta,
+  });
 
   const response = await fetch(`${MESHULAM_API_URL}/approveTransaction`, {
     method: "POST",
@@ -179,7 +213,8 @@ async function approveTransaction(webhookData: Record<string, string>) {
   });
 
   const result = await response.json();
-  console.log("approveTransaction response:", JSON.stringify(result));
+  console.log("[Webhook] approveTransaction response status:", response.status);
+  console.log("[Webhook] approveTransaction response:", JSON.stringify(result));
   
   if (result.status !== 1 && result.status !== "1") {
     throw new Error(`Approve failed: ${JSON.stringify(result)}`);
