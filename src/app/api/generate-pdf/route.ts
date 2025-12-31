@@ -1,8 +1,36 @@
 import { NextRequest, NextResponse } from "next/server";
-import puppeteer from "puppeteer";
+import puppeteer from "puppeteer-core";
+import chromium from "@sparticuz/chromium";
 import { ClaimData, calculateFee, findCourtByCity, CLAIM_TYPES } from "@/lib/types";
-import { generateParkingAppealHTML, ParkingAppealData } from "@/lib/services/parking";
+import { generateParkingAppealHTML } from "@/lib/services/parking";
+import { ParkingAppealData } from "@/lib/services/parking/types";
 import { ServiceType } from "@/lib/services";
+
+// Helper to get browser for Vercel or local
+async function getBrowser() {
+  const isVercel = process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME;
+  
+  if (isVercel) {
+    // Running on Vercel - use chromium
+    return puppeteer.launch({
+      args: chromium.args,
+      defaultViewport: { width: 1280, height: 720 },
+      executablePath: await chromium.executablePath(),
+      headless: true,
+    });
+  } else {
+    // Running locally - use system Chrome
+    return puppeteer.launch({
+      headless: true,
+      args: ['--no-sandbox', '--disable-setuid-sandbox'],
+      executablePath: process.platform === 'darwin' 
+        ? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
+        : process.platform === 'win32'
+        ? 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe'
+        : '/usr/bin/google-chrome',
+    });
+  }
+}
 
 function generateClaimHTML(data: ClaimData): string {
   const today = new Date().toLocaleDateString("he-IL");
@@ -504,10 +532,7 @@ export async function POST(request: NextRequest) {
       }
     }
     
-    const browser = await puppeteer.launch({
-      headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox'],
-    });
+    const browser = await getBrowser();
     
     const page = await browser.newPage();
     
