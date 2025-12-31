@@ -60,19 +60,21 @@ export async function POST(req: NextRequest) {
     // Convert to flat object for easier access
     const data: Record<string, string> = {};
     for (const [key, value] of Object.entries(rawData)) {
-      // Handle "data[fieldName]" format
-      const match = key.match(/^data\[(.+?)\]$/);
-      if (match) {
-        data[match[1]] = value;
-      } else if (key.startsWith('data[customFields]')) {
-        // Handle nested "data[customFields][cField1]" format
+      // First check for nested "data[customFields][cField1]" format
+      if (key.startsWith('data[customFields]')) {
         const cfMatch = key.match(/^data\[customFields\]\[(.+?)\]$/);
         if (cfMatch) {
           data[cfMatch[1]] = value;
         }
       } else {
-        // Regular field
-        data[key] = value;
+        // Handle "data[fieldName]" format (single bracket)
+        const match = key.match(/^data\[([^\]]+)\]$/);
+        if (match) {
+          data[match[1]] = value;
+        } else {
+          // Regular field
+          data[key] = value;
+        }
       }
     }
     

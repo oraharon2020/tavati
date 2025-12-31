@@ -140,9 +140,13 @@ export function useChat({
         );
       }
 
+      // Extract claim data from the response if available
+      const extractedClaimData = extractClaimData(assistantMessage.content);
+      const claimDataToSave = extractedClaimData || claimData;
+
       // Save to session after message complete
       const updatedMessages = [...messages, userMessage, assistantMessage];
-      saveToSession(updatedMessages, currentStep, claimData);
+      saveToSession(updatedMessages, currentStep, claimDataToSave);
     } catch (error) {
       console.error("Error:", error);
       setMessages((prev) => [
@@ -156,7 +160,7 @@ export function useChat({
     } finally {
       setIsLoading(false);
     }
-  }, [input, isLoading, messages, setMessages, setShowWelcome, saveToSession, currentStep, claimData, uploadedFiles, setUploadedFiles]);
+  }, [input, isLoading, messages, setMessages, setShowWelcome, saveToSession, currentStep, claimData, uploadedFiles, setUploadedFiles, extractClaimData]);
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -219,9 +223,13 @@ export function useChat({
         );
       }
 
+      // Extract claim data from the response if available
+      const extractedClaimData = extractClaimData(assistantMessage.content);
+      const claimDataToSave = extractedClaimData || claimData;
+
       // Save to session after message complete
       const updatedMessages = [...messages, userMessage, assistantMessage];
-      saveToSession(updatedMessages, currentStep, claimData);
+      saveToSession(updatedMessages, currentStep, claimDataToSave);
     } catch (error) {
       console.error("Error:", error);
       setMessages((prev) => [
@@ -235,7 +243,7 @@ export function useChat({
     } finally {
       setIsLoading(false);
     }
-  }, [isLoading, messages, setMessages, setShowWelcome, saveToSession, currentStep, claimData]);
+  }, [isLoading, messages, setMessages, setShowWelcome, saveToSession, currentStep, claimData, extractClaimData]);
 
   const handleQuickAction = useCallback((text: string) => {
     setInput(text);
