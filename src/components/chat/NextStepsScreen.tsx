@@ -87,12 +87,14 @@ export function NextStepsScreen({
                   בית המשפט שלך
                 </h3>
                 <p className="text-lg font-semibold text-blue-600">{court.name}</p>
-                <p className="text-sm text-gray-500">{court.address}</p>
-                {court.phone && (
-                  <a href={`tel:${court.phone}`} className="inline-flex items-center gap-1 mt-2 text-sm text-emerald-600 hover:underline">
-                    📞 {court.phone}
-                  </a>
-                )}
+                <a 
+                  href="https://www.gov.il/he/government-service-branches/?officeId=b7f4cf74-9ceb-454d-a057-e9bdc1dcdae9" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 mt-2 text-sm text-emerald-600 hover:underline"
+                >
+                  🔗 מצא כתובת וטלפון באתר הרשמי
+                </a>
               </div>
             </div>
           </motion.div>

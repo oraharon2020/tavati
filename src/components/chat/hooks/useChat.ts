@@ -59,9 +59,21 @@ export function useChat({
     if (jsonMatch) {
       try {
         const parsed = JSON.parse(jsonMatch[1]);
-        if (parsed.status === "complete") {
-          // תמיכה גם ב-claimData וגם ב-parkingAppealData
-          return parsed.claimData || parsed.parkingAppealData || null;
+        console.log("Parsed JSON from AI:", parsed);
+        
+        // תמיכה גם ב-claimData וגם ב-parkingAppealData
+        // בדוק גם אם יש status: "complete" וגם אם פשוט יש data
+        const claimData = parsed.claimData || parsed.parkingAppealData || null;
+        
+        if (claimData) {
+          console.log("Extracted claim data:", claimData);
+          return claimData;
+        }
+        
+        // אם אין claimData אבל יש plaintiff/defendant ישירות (מבנה ישן)
+        if (parsed.plaintiff || parsed.defendant || parsed.appellant) {
+          console.log("Extracted claim data (direct structure):", parsed);
+          return parsed as ClaimData;
         }
       } catch (e) {
         console.error("Failed to parse claim data:", e);
