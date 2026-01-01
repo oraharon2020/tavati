@@ -366,6 +366,8 @@ export default function ChatInterface({ sessionId, phone, serviceType = 'claims'
           onShowPreview={() => payment.setShowPreview(true)}
           onPaymentAndDownload={payment.handlePaymentAndDownload}
           onSendMessage={chat.handleSendMessage}
+          serviceType={serviceType}
+          price={price}
         />
       </main>
 

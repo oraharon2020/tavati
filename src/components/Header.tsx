@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Scale, ArrowLeft, FolderOpen, Menu, X } from "lucide-react";
+import { Scale, ArrowLeft, FolderOpen, Menu, X, Car } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -84,14 +84,23 @@ export default function Header() {
           </nav>
 
           {/* Right Side Actions */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             {/* My Area Button */}
             <Link 
               href="/my-area"
-              className="hidden sm:flex items-center gap-2 px-4 py-2.5 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-xl transition-colors font-semibold text-sm"
+              className="hidden sm:flex items-center gap-2 px-3 py-2 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-xl transition-colors font-semibold text-sm"
             >
               <FolderOpen className="w-4 h-4" />
               <span>האזור שלי</span>
+            </Link>
+
+            {/* Parking Appeal Button */}
+            <Link 
+              href="/parking"
+              className="hidden lg:flex items-center gap-2 px-4 py-2.5 bg-emerald-50 text-emerald-700 rounded-xl hover:bg-emerald-100 transition-all text-sm font-bold"
+            >
+              <Car className="w-4 h-4" />
+              <span>ערעור חניה</span>
             </Link>
 
             {/* CTA Button */}
@@ -136,6 +145,10 @@ export default function Header() {
                 שאלות נפוצות
               </Link>
               <div className="border-t border-neutral-100 mt-2 pt-2">
+                <Link href="/parking" onClick={(e) => handleNavClick(e, "/parking")} className="flex items-center gap-2 px-4 py-3 text-emerald-700 hover:bg-emerald-50 rounded-lg transition-colors font-semibold">
+                  <Car className="w-5 h-5" />
+                  <span>ערעור על דוח חניה</span>
+                </Link>
                 <Link href="/my-area" onClick={(e) => handleNavClick(e, "/my-area")} className="flex items-center gap-2 px-4 py-3 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors font-semibold">
                   <FolderOpen className="w-5 h-5" />
                   <span>האזור שלי</span>

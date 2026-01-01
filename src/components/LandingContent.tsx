@@ -175,6 +175,39 @@ export default function LandingContent({ blogSection }: Props) {
         </div>
       </section>
 
+      {/* Services Section - New */}
+      <section className="py-12 px-6 bg-gradient-to-b from-white to-neutral-50">
+        <div className="max-w-4xl mx-auto">
+          <div className="grid md:grid-cols-2 gap-6">
+            {/* Small Claims Card */}
+            <Link href="/chat" className="group bg-white rounded-2xl p-6 border-2 border-blue-100 hover:border-blue-300 transition-all hover:shadow-lg">
+              <div className="w-14 h-14 bg-blue-100 rounded-xl flex items-center justify-center mb-4 group-hover:bg-blue-200 transition-colors">
+                <span className="text-3xl">⚖️</span>
+              </div>
+              <h3 className="text-xl font-bold text-neutral-900 mb-2">תביעות קטנות</h3>
+              <p className="text-neutral-600 mb-4">הכן כתב תביעה מקצועי לבית המשפט תוך 5 דקות</p>
+              <div className="flex items-center justify-between">
+                <span className="text-2xl font-bold text-blue-600">₪{PRICES.claims}</span>
+                <span className="text-blue-600 font-semibold group-hover:translate-x-[-4px] transition-transform">התחל עכשיו ←</span>
+              </div>
+            </Link>
+
+            {/* Parking Appeal Card */}
+            <Link href="/parking" className="group bg-white rounded-2xl p-6 border-2 border-emerald-100 hover:border-emerald-300 transition-all hover:shadow-lg">
+              <div className="w-14 h-14 bg-emerald-100 rounded-xl flex items-center justify-center mb-4 group-hover:bg-emerald-200 transition-colors">
+                <span className="text-3xl">🚗</span>
+              </div>
+              <h3 className="text-xl font-bold text-neutral-900 mb-2">ערעור דוח חניה</h3>
+              <p className="text-neutral-600 mb-4">קיבלת דוח לא הוגן? ערער עליו בקלות</p>
+              <div className="flex items-center justify-between">
+                <span className="text-2xl font-bold text-emerald-600">₪{PRICES.parking}</span>
+                <span className="text-emerald-600 font-semibold group-hover:translate-x-[-4px] transition-transform">התחל עכשיו ←</span>
+              </div>
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* How it Works */}
       <section id="how-it-works" className="py-16 px-6 bg-neutral-50">
         <div className="max-w-4xl mx-auto">

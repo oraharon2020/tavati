@@ -10,6 +10,8 @@ import { QuickReplyButtons, parseQuickReplies } from "./QuickReplyButtons";
 import { ChatInlineForm, parseInlineForm, FormType } from "./ChatInlineForm";
 import { PRICES } from "@/lib/prices";
 
+import { ServiceType } from "@/lib/services";
+
 interface ChatMessagesProps {
   messages: Message[];
   isLoading: boolean;
@@ -19,6 +21,8 @@ interface ChatMessagesProps {
   onShowPreview: () => void;
   onPaymentAndDownload: () => void;
   onSendMessage?: (text: string) => void;
+  serviceType?: ServiceType;
+  price?: number;
 }
 
 // עיבוד והצגת הודעות - מסיר גם BUTTONS ו-FORM תגים
@@ -153,7 +157,12 @@ export function ChatMessages({
   onShowPreview,
   onPaymentAndDownload,
   onSendMessage,
+  serviceType = 'claims',
+  price,
 }: ChatMessagesProps) {
+  // טקסטים דינמיים לפי סוג השירות
+  const documentName = serviceType === 'parking' ? 'מכתב הערעור' : 'כתב התביעה';
+  const displayPrice = price || PRICES[serviceType] || PRICES.claims;
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [answeredButtons, setAnsweredButtons] = useState<Set<string>>(new Set());
   const [answeredForms, setAnsweredForms] = useState<Set<string>>(new Set());
@@ -264,7 +273,7 @@ export function ChatMessages({
               whileTap={{ scale: 0.98 }}
             >
               <Eye className="w-4 h-4" />
-              <span>צפה בתצוגה מקדימה של כתב התביעה</span>
+              <span>צפה בתצוגה מקדימה של {documentName}</span>
             </motion.button>
           )}
           
@@ -280,13 +289,13 @@ export function ChatMessages({
               {hasPaid ? (
                 <>
                   <Download className="w-5 h-5" />
-                  <span>הורד את כתב התביעה שוב</span>
+                  <span>הורד את {documentName} שוב</span>
                 </>
               ) : (
                 <>
                   <CreditCard className="w-5 h-5" />
-                  <span>שלם והורד את כתב התביעה</span>
-                  <span className="bg-white/20 px-2 py-0.5 rounded-full text-sm">₪{PRICES.claims}</span>
+                  <span>שלם והורד את {documentName}</span>
+                  <span className="bg-white/20 px-2 py-0.5 rounded-full text-sm">₪{displayPrice}</span>
                 </>
               )}
             </span>
