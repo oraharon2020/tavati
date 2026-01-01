@@ -408,7 +408,7 @@ export default function MyAreaPage() {
                           </button>
                         ) : claim.status === "pending_payment" ? (
                           <Link
-                            href={`/chat?session=${claim.id}`}
+                            href={`/chat?session=${claim.id}&service=${claim.serviceType}`}
                             className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 text-white rounded-xl hover:from-amber-600 hover:to-amber-700 transition-all shadow-md shadow-amber-500/20 text-sm font-semibold"
                           >
                             <CreditCard className="w-4 h-4" />
@@ -416,7 +416,7 @@ export default function MyAreaPage() {
                           </Link>
                         ) : (
                           <Link
-                            href={`/chat?session=${claim.id}`}
+                            href={`/chat?session=${claim.id}&service=${claim.serviceType}`}
                             className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all shadow-md shadow-blue-500/20 text-sm font-semibold"
                           >
                             המשך
