@@ -31,11 +31,21 @@ export async function POST(req: NextRequest) {
       cancelUrl,
     } = body;
 
-    if (!sessionId || !amount || !customerName || !customerPhone) {
+    if (!sessionId || amount === undefined || amount === null || !customerName || !customerPhone) {
       return NextResponse.json(
         { error: "Missing required fields: sessionId, amount, customerName, customerPhone" },
         { status: 400 }
       );
+    }
+
+    // Handle free transactions (100% discount)
+    if (amount === 0) {
+      return NextResponse.json({
+        success: true,
+        freeTransaction: true,
+        sessionId,
+        message: "Free transaction - no payment needed",
+      });
     }
 
     // Normalize and validate phone number (Israeli mobile)

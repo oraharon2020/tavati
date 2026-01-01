@@ -50,6 +50,12 @@ export default function PaymentModal({
     setPaymentLoading(false);
     
     if (result) {
+      // Handle free transaction (100% discount)
+      if (result === "FREE_TRANSACTION") {
+        onPaymentSuccess();
+        return;
+      }
+      
       try {
         let processInfo;
         try {

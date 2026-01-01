@@ -243,6 +243,22 @@ export function usePayment({
         throw new Error(data.error || data.details || "שגיאה ביצירת דף תשלום");
       }
 
+      // Handle free transaction (100% discount coupon)
+      if (data.freeTransaction) {
+        // Update session status to paid
+        await fetch("/api/sessions", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            sessionId: currentSessionId,
+            status: "paid",
+          }),
+        });
+        setHasPaid(true);
+        setIsProcessingPayment(false);
+        return "FREE_TRANSACTION";
+      }
+
       // החזר אובייקט עם כל הנתונים לתשלום
       if (data.authCode || data.paymentUrl) {
         setIsProcessingPayment(false);
