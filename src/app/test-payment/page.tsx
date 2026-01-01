@@ -1,5 +1,6 @@
 "use client";
 
+// Test payment page - for debugging payment flow
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
 
