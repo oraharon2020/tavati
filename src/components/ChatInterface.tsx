@@ -350,6 +350,8 @@ export default function ChatInterface({ sessionId, phone, serviceType = 'claims'
           payment.setShowPreview(false);
           payment.setShowPaymentModal(true);
         }}
+        serviceType={serviceType}
+        price={price}
       />
 
       {/* Step 7 - Request Claim Generation */}
