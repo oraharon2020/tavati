@@ -6,6 +6,7 @@ export { ChatMessages } from "./ChatMessages";
 export { ChatInput } from "./ChatInput";
 export { ChatWelcome } from "./ChatWelcome";
 export { NextStepsScreen } from "./NextStepsScreen";
+export { ParkingNextStepsScreen } from "./ParkingNextStepsScreen";
 export { AttachmentsScreen } from "./AttachmentsScreen";
 
 // Hooks

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Scale, RotateCcw, FileText, Home, ChevronDown, CheckCircle2 } from "lucide-react";
+import { Scale, RotateCcw, FileText, Home, ChevronDown, CheckCircle2, Car } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
@@ -12,6 +12,7 @@ import {
   ChatInput,
   ChatWelcome,
   NextStepsScreen,
+  ParkingNextStepsScreen,
   AttachmentsScreen,
   useSession,
   useChat,
@@ -111,6 +112,19 @@ export default function ChatInterface({ sessionId, phone, serviceType = 'claims'
       );
     }
 
+    // מסך מודולרי לפי סוג שירות
+    if (serviceType === 'parking') {
+      return (
+        <ParkingNextStepsScreen
+          claimData={session.claimData}
+          attachments={session.attachments}
+          onGeneratePDF={() => payment.handleGeneratePDF(false)}
+          onShowAttachments={() => setShowAttachmentsScreen(true)}
+          onReset={session.resetChat}
+        />
+      );
+    }
+
     return (
       <NextStepsScreen
         claimData={session.claimData}
@@ -122,6 +136,11 @@ export default function ChatInterface({ sessionId, phone, serviceType = 'claims'
     );
   }
 
+  // Get service-specific styling
+  const isParking = serviceType === 'parking';
+  const primaryColor = isParking ? 'emerald' : 'blue';
+  const ServiceIcon = isParking ? Car : Scale;
+
   return (
     <div className="flex flex-col h-screen bg-gray-50">
       {/* Header */}
@@ -131,8 +150,11 @@ export default function ChatInterface({ sessionId, phone, serviceType = 'claims'
           <div className="grid grid-cols-3 items-center">
             {/* Left: Logo + Name */}
             <Link href="/" className="flex items-center gap-2 justify-self-start">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600 to-emerald-500 flex items-center justify-center">
-                <Scale className="w-4 h-4 text-white" />
+              <div className={cn(
+                "w-8 h-8 rounded-lg flex items-center justify-center",
+                isParking ? "bg-gradient-to-br from-emerald-500 to-emerald-600" : "bg-gradient-to-br from-blue-600 to-emerald-500"
+              )}>
+                <ServiceIcon className="w-4 h-4 text-white" />
               </div>
               <span className="font-bold text-gray-900">תבעתי</span>
             </Link>
@@ -227,8 +249,13 @@ export default function ChatInterface({ sessionId, phone, serviceType = 'claims'
               >
                 <Home className="w-5 h-5 text-neutral-500" />
               </Link>
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-emerald-500 flex items-center justify-center shadow-lg shadow-blue-500/20">
-                <Scale className="w-5 h-5 text-white" />
+              <div className={cn(
+                "w-10 h-10 rounded-xl flex items-center justify-center shadow-lg",
+                isParking 
+                  ? "bg-gradient-to-br from-emerald-500 to-emerald-600 shadow-emerald-500/20"
+                  : "bg-gradient-to-br from-blue-600 to-emerald-500 shadow-blue-500/20"
+              )}>
+                <ServiceIcon className="w-5 h-5 text-white" />
               </div>
               <span className="font-bold text-lg text-gray-900">תבעתי</span>
             </div>
