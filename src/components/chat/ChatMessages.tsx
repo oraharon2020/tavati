@@ -56,7 +56,7 @@ const renderFormattedText = (text: string) => {
       return <hr key={lineIndex} className="my-3 border-[var(--border)]" />;
     }
     
-    // עיבוד לינקים [text](url) ובולד **text**
+    // עיבוד לינקים [text](url), URL רגילים, ובולד **text**
     const processLine = (text: string): React.ReactNode[] => {
       const result: React.ReactNode[] = [];
       let remaining = text;
@@ -65,21 +65,26 @@ const renderFormattedText = (text: string) => {
       while (remaining.length > 0) {
         // חפש לינק [text](url) - גמיש יותר
         const linkMatch = remaining.match(/\[([^\]]+)\]\(([^)\s]+)\)/);
+        // חפש URL רגיל (לא בתוך markdown)
+        const urlMatch = remaining.match(/(?<!\]\()https?:\/\/[^\s<>)"]+/);
         // חפש בולד **text**
         const boldMatch = remaining.match(/\*\*([^*]+)\*\*/);
         
         // מצא מה קודם
         const linkIndex = linkMatch ? remaining.indexOf(linkMatch[0]) : Infinity;
+        const urlIndex = urlMatch ? remaining.indexOf(urlMatch[0]) : Infinity;
         const boldIndex = boldMatch ? remaining.indexOf(boldMatch[0]) : Infinity;
         
-        if (linkIndex === Infinity && boldIndex === Infinity) {
+        const minIndex = Math.min(linkIndex, urlIndex, boldIndex);
+        
+        if (minIndex === Infinity) {
           // אין יותר תבניות, הוסף את השאר
           result.push(remaining);
           break;
         }
         
-        if (linkIndex < boldIndex) {
-          // לינק קודם
+        if (linkIndex === minIndex) {
+          // לינק markdown קודם
           if (linkIndex > 0) {
             result.push(remaining.slice(0, linkIndex));
           }
@@ -95,6 +100,23 @@ const renderFormattedText = (text: string) => {
             </a>
           );
           remaining = remaining.slice(linkIndex + linkMatch![0].length);
+        } else if (urlIndex === minIndex) {
+          // URL רגיל
+          if (urlIndex > 0) {
+            result.push(remaining.slice(0, urlIndex));
+          }
+          result.push(
+            <a
+              key={`url-${keyIndex++}`}
+              href={urlMatch![0]}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-600 hover:text-blue-800 underline"
+            >
+              {urlMatch![0]}
+            </a>
+          );
+          remaining = remaining.slice(urlIndex + urlMatch![0].length);
         } else {
           // בולד קודם
           if (boldIndex > 0) {
