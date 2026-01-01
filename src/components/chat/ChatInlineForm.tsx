@@ -44,6 +44,22 @@ function FormField({
   );
 }
 
+// פונקציית וולידציה ונרמול טלפון ישראלי
+function normalizeIsraeliPhone(phone: string): string {
+  let normalized = phone.replace(/[-\s]/g, "");
+  if (normalized.startsWith("+972")) {
+    normalized = "0" + normalized.slice(4);
+  } else if (normalized.startsWith("972")) {
+    normalized = "0" + normalized.slice(3);
+  }
+  return normalized;
+}
+
+function isValidIsraeliMobile(phone: string): boolean {
+  const normalized = normalizeIsraeliPhone(phone);
+  return /^05\d{8}$/.test(normalized);
+}
+
 // טופס פרטי התובע
 function PlaintiffForm({ onSubmit, disabled }: { onSubmit: (data: Record<string, string>) => void; disabled?: boolean }) {
   const [formData, setFormData] = useState({
@@ -54,19 +70,39 @@ function PlaintiffForm({ onSubmit, disabled }: { onSubmit: (data: Record<string,
     address: "",
     city: "",
   });
+  const [phoneError, setPhoneError] = useState("");
+
+  const handlePhoneChange = (value: string) => {
+    setFormData(prev => ({ ...prev, phone: value }));
+    // נקה שגיאה אם הטלפון תקין
+    if (value && !isValidIsraeliMobile(value)) {
+      setPhoneError("מספר טלפון לא תקין (צריך להתחיל ב-05)");
+    } else {
+      setPhoneError("");
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.fullName || !formData.idNumber || !formData.phone) return;
     
+    // וולידציה נוספת לפני שליחה
+    if (!isValidIsraeliMobile(formData.phone)) {
+      setPhoneError("מספר טלפון לא תקין (צריך להתחיל ב-05)");
+      return;
+    }
+    
+    // נרמל את הטלפון לפני שליחה
+    const normalizedPhone = normalizeIsraeliPhone(formData.phone);
+    
     const text = `שם: ${formData.fullName}
 ת.ז.: ${formData.idNumber}
-טלפון: ${formData.phone}
+טלפון: ${normalizedPhone}
 ${formData.email ? `אימייל: ${formData.email}` : ""}
 ${formData.address ? `כתובת: ${formData.address}` : ""}
 ${formData.city ? `עיר: ${formData.city}` : ""}`.trim();
     
-    onSubmit({ text, ...formData });
+    onSubmit({ text, ...formData, phone: normalizedPhone });
   };
 
   return (
@@ -96,16 +132,19 @@ ${formData.city ? `עיר: ${formData.city}` : ""}`.trim();
         </FormField>
       </div>
       <div className="grid grid-cols-2 gap-3">
-        <FormField label="טלפון" required>
+        <FormField label="טלפון נייד" required>
           <input
             type="tel"
             placeholder="050-1234567"
             value={formData.phone}
-            onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
-            className={inputClassName}
+            onChange={(e) => handlePhoneChange(e.target.value)}
+            className={cn(inputClassName, phoneError && "border-red-500 focus:ring-red-500")}
             required
             disabled={disabled}
           />
+          {phoneError && (
+            <p className="text-xs text-red-500 mt-1">{phoneError}</p>
+          )}
         </FormField>
         <FormField label="אימייל">
           <input
@@ -311,19 +350,37 @@ function AppellantForm({ onSubmit, disabled }: { onSubmit: (data: Record<string,
     city: "",
     isOwner: "true", // בעל הרכב או נהג
   });
+  const [phoneError, setPhoneError] = useState("");
+
+  const handlePhoneChange = (value: string) => {
+    setFormData(prev => ({ ...prev, phone: value }));
+    if (value && !isValidIsraeliMobile(value)) {
+      setPhoneError("מספר טלפון לא תקין (צריך להתחיל ב-05)");
+    } else {
+      setPhoneError("");
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.fullName || !formData.idNumber) return;
     
+    // וולידציה של טלפון אם הוזן
+    if (formData.phone && !isValidIsraeliMobile(formData.phone)) {
+      setPhoneError("מספר טלפון לא תקין (צריך להתחיל ב-05)");
+      return;
+    }
+    
+    const normalizedPhone = formData.phone ? normalizeIsraeliPhone(formData.phone) : "";
+    
     const text = `שם מלא: ${formData.fullName}
 ת.ז.: ${formData.idNumber}
-${formData.phone ? `טלפון: ${formData.phone}` : ""}
+${normalizedPhone ? `טלפון: ${normalizedPhone}` : ""}
 ${formData.email ? `אימייל: ${formData.email}` : ""}
 ${formData.address ? `כתובת: ${formData.address}, ${formData.city}` : ""}
 ${formData.isOwner === "true" ? "בעל הרכב הרשום" : "נהג (לא בעל הרכב)"}`.trim();
     
-    onSubmit({ text, ...formData });
+    onSubmit({ text, ...formData, phone: normalizedPhone });
   };
 
   return (
@@ -353,15 +410,18 @@ ${formData.isOwner === "true" ? "בעל הרכב הרשום" : "נהג (לא ב�
         </FormField>
       </div>
       <div className="grid grid-cols-2 gap-3">
-        <FormField label="טלפון">
+        <FormField label="טלפון נייד">
           <input
             type="tel"
             placeholder="050-1234567"
             value={formData.phone}
-            onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
-            className={inputClassName}
+            onChange={(e) => handlePhoneChange(e.target.value)}
+            className={cn(inputClassName, phoneError && "border-red-500 focus:ring-red-500")}
             disabled={disabled}
           />
+          {phoneError && (
+            <p className="text-xs text-red-500 mt-1">{phoneError}</p>
+          )}
         </FormField>
         <FormField label="אימייל">
           <input

@@ -38,9 +38,18 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Validate phone number (Israeli mobile: 05xxxxxxxx)
+    // Normalize and validate phone number (Israeli mobile)
+    let normalizedPhone = customerPhone.replace(/[-\s]/g, ""); // Remove dashes and spaces
+    
+    // Handle +972 format
+    if (normalizedPhone.startsWith("+972")) {
+      normalizedPhone = "0" + normalizedPhone.slice(4);
+    } else if (normalizedPhone.startsWith("972")) {
+      normalizedPhone = "0" + normalizedPhone.slice(3);
+    }
+    
     const phoneRegex = /^05\d{8}$/;
-    if (!phoneRegex.test(customerPhone.replace(/-/g, ""))) {
+    if (!phoneRegex.test(normalizedPhone)) {
       return NextResponse.json(
         { error: "Invalid phone number. Must be Israeli mobile (05xxxxxxxx)" },
         { status: 400 }
@@ -69,7 +78,7 @@ export async function POST(req: NextRequest) {
     
     // Required customer fields
     formData.append("pageField[fullName]", customerName);
-    formData.append("pageField[phone]", customerPhone.replace(/-/g, ""));
+    formData.append("pageField[phone]", normalizedPhone);
     if (customerEmail) {
       formData.append("pageField[email]", customerEmail);
     }
