@@ -60,8 +60,8 @@ const renderFormattedText = (text: string) => {
       let keyIndex = 0;
       
       while (remaining.length > 0) {
-        // חפש לינק [text](url)
-        const linkMatch = remaining.match(/\[([^\]]+)\]\(([^)]+)\)/);
+        // חפש לינק [text](url) - גמיש יותר
+        const linkMatch = remaining.match(/\[([^\]]+)\]\(([^)\s]+)\)/);
         // חפש בולד **text**
         const boldMatch = remaining.match(/\*\*([^*]+)\*\*/);
         
