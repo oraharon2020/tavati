@@ -44,8 +44,11 @@ const formatMessage = (content: string) => {
 const renderFormattedText = (text: string) => {
   const formatted = formatMessage(text);
   
+  // תיקון לינקים שנשברו לשתי שורות: [text]\n(url) -> [text](url)
+  const fixedLinks = formatted.replace(/\[([^\]]+)\]\s*\n+\s*\(([^)]+)\)/g, '[$1]($2)');
+  
   // פיצול לפי שורות
-  const lines = formatted.split("\n");
+  const lines = fixedLinks.split("\n");
   
   return lines.map((line, lineIndex) => {
     // קו מפריד
