@@ -1,6 +1,7 @@
 // שירות תביעות קטנות - קונפיגורציה
 
 import { ServiceConfig, Step } from '../index';
+import { PRICES } from '@/lib/prices';
 
 export const CLAIMS_STEPS: Step[] = [
   { id: 1, name: "פרטיך", icon: "1" },
@@ -18,7 +19,7 @@ export const CLAIMS_CONFIG: ServiceConfig = {
   name: 'תביעות קטנות',
   nameEnglish: 'Small Claims',
   description: 'הכן כתב תביעה מוכן להגשה לבית המשפט',
-  price: 79,
+  price: PRICES.claims,
   icon: '⚖️',
   color: 'blue',
   steps: CLAIMS_STEPS,

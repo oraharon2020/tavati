@@ -5,6 +5,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Metadata } from "next";
 import { ArrowRight } from "lucide-react";
+import { PRICES } from "@/lib/prices";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -151,7 +152,7 @@ export default async function BlogPostPage({ params }: Props) {
             href="/chat"
             className="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors"
           >
-            התחל עכשיו - ₪79
+            התחל עכשיו - ₪{PRICES.claims}
           </Link>
         </div>
       </main>

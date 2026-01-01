@@ -51,7 +51,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Calculate discounted price
-    const originalPrice = 79;
+    // Import price dynamically based on service type (default to claims)
+    const { PRICES } = await import("@/lib/prices");
+    const originalPrice = PRICES.claims;
     let discountAmount = 0;
     let finalPrice = originalPrice;
 

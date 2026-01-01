@@ -1,6 +1,7 @@
 // שירות ערעור על דוח חניה - קונפיגורציה
 
 import { ServiceConfig, Step } from '../index';
+import { PRICES } from '@/lib/prices';
 
 export const PARKING_STEPS: Step[] = [
   { id: 1, name: "פרטיך", icon: "1" },
@@ -14,7 +15,7 @@ export const PARKING_CONFIG: ServiceConfig = {
   name: 'ערעור דוח חניה',
   nameEnglish: 'Parking Ticket Appeal',
   description: 'ערער על דוח חניה בקלות ובמהירות',
-  price: 39,
+  price: PRICES.parking,
   icon: '🚗',
   color: 'emerald',
   steps: PARKING_STEPS,

@@ -7,6 +7,7 @@ import TestimonialsCarousel from "@/components/TestimonialsCarousel";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { motion } from "framer-motion";
+import { PRICES } from "@/lib/prices";
 
 interface Props {
   blogSection: React.ReactNode;
@@ -167,7 +168,7 @@ export default function LandingContent({ blogSection }: Props) {
               <div className="text-sm text-neutral-600 mt-1">וכתב התביעה מוכן</div>
             </div>
             <div>
-              <div className="text-3xl md:text-4xl font-bold text-blue-600">₪79</div>
+              <div className="text-3xl md:text-4xl font-bold text-blue-600">₪{PRICES.claims}</div>
               <div className="text-sm text-neutral-600 mt-1">בלבד. בלי הפתעות</div>
             </div>
           </div>
@@ -285,7 +286,7 @@ export default function LandingContent({ blogSection }: Props) {
               </div>
               <div className="bg-blue-50 rounded-2xl p-5 border-2 border-blue-200">
                 <p className="text-sm text-blue-600 mb-1">תבעתי</p>
-                <p className="text-2xl font-bold text-blue-600">₪79</p>
+                <p className="text-2xl font-bold text-blue-600">₪{PRICES.claims}</p>
               </div>
             </div>
             

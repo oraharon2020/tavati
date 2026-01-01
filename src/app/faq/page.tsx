@@ -6,6 +6,7 @@ import Footer from "@/components/Footer";
 import { ChevronDown } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Script from "next/script";
+import { PRICES } from "@/lib/prices";
 
 const faqs = [
   {
@@ -54,7 +55,7 @@ const faqs = [
       },
       {
         q: "כמה זה עולה?",
-        a: "השירות עולה 79 ₪ בלבד - תשלום חד פעמי. אתה משלם רק כשכתב התביעה מוכן ומרוצה מהתוצאה. ניסוח אצל עורך דין היה עולה 500-1,500 ₪ לפחות."
+        a: `השירות עולה ${PRICES.claims} ₪ בלבד - תשלום חד פעמי. אתה משלם רק כשכתב התביעה מוכן ומרוצה מהתוצאה. ניסוח אצל עורך דין היה עולה 500-1,500 ₪ לפחות.`
       },
       {
         q: "האם זה מחליף ייעוץ משפטי?",

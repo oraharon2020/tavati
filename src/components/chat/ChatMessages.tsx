@@ -8,6 +8,7 @@ import { Message } from "./types";
 import { ClaimData } from "@/lib/pdfGenerator";
 import { QuickReplyButtons, parseQuickReplies } from "./QuickReplyButtons";
 import { ChatInlineForm, parseInlineForm, FormType } from "./ChatInlineForm";
+import { PRICES } from "@/lib/prices";
 
 interface ChatMessagesProps {
   messages: Message[];
@@ -285,7 +286,7 @@ export function ChatMessages({
                 <>
                   <CreditCard className="w-5 h-5" />
                   <span>שלם והורד את כתב התביעה</span>
-                  <span className="bg-white/20 px-2 py-0.5 rounded-full text-sm">₪79</span>
+                  <span className="bg-white/20 px-2 py-0.5 rounded-full text-sm">₪{PRICES.claims}</span>
                 </>
               )}
             </span>

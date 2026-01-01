@@ -1,5 +1,6 @@
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import { PRICES } from "@/lib/prices";
 
 export default function TermsPage() {
   return (
@@ -40,7 +41,7 @@ export default function TermsPage() {
             <h2 className="text-xl font-bold mt-8 mb-4">4. תשלום</h2>
             <p>
               השימוש בצ'אט להכנת התביעה הוא חינם.
-              התשלום בסך 79 ₪ נדרש להורדת כתב התביעה המוכן.
+              התשלום בסך {PRICES.claims} ₪ נדרש להורדת כתב התביעה המוכן.
               התשלום הוא חד-פעמי ואינו מקנה זכות להחזר כספי לאחר הורדת המסמך.
             </p>
           </section>

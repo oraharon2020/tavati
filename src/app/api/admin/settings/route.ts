@@ -2,19 +2,22 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_KEY!
-);
-
 // Default prices
 const DEFAULT_SETTINGS = {
   claims_price: 79,
   parking_price: 39,
 };
 
+function getSupabase() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_KEY!
+  );
+}
+
 // GET - Get current settings
 export async function GET(req: NextRequest) {
+  const supabase = getSupabase();
   // Check admin auth
   const cookieStore = await cookies();
   const adminCookie = cookieStore.get("admin_session");
@@ -45,6 +48,7 @@ export async function GET(req: NextRequest) {
 
 // PUT - Update settings
 export async function PUT(req: NextRequest) {
+  const supabase = getSupabase();
   // Check admin auth
   const cookieStore = await cookies();
   const adminCookie = cookieStore.get("admin_session");

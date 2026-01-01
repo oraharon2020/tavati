@@ -4,11 +4,12 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import WhatsAppButton from "@/components/WhatsAppButton";
 import { ToastProvider } from "@/components/Toast";
 import { Analytics } from "@vercel/analytics/react";
+import { PRICES } from "@/lib/prices";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://tavati.app"),
   title: "תבעתי - תביעות קטנות בקלות | כתב תביעה תוך דקות",
-  description: "צרו כתב תביעה מקצועי לבית משפט לתביעות קטנות תוך דקות. המערכת החכמה שמנחה אתכם צעד אחר צעד. ללא צורך בעורך דין. רק ₪79.",
+  description: `צרו כתב תביעה מקצועי לבית משפט לתביעות קטנות תוך דקות. המערכת החכמה שמנחה אתכם צעד אחר צעד. ללא צורך בעורך דין. רק ₪${PRICES.claims}.`,
   keywords: [
     "תביעות קטנות", 
     "בית משפט", 
@@ -107,7 +108,7 @@ export default function RootLayout({
         "operatingSystem": "Web",
         "offers": {
           "@type": "Offer",
-          "price": "79",
+          "price": "${PRICES.claims}",
           "priceCurrency": "ILS"
         },
         "aggregateRating": {
@@ -124,7 +125,7 @@ export default function RootLayout({
             "name": "כמה עולה להגיש תביעה קטנה?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "הכנת כתב תביעה במערכת תבעתי עולה ₪79 חד פעמי. בנוסף יש אגרת בית משפט של כ-1% מסכום התביעה."
+              "text": `הכנת כתב תביעה במערכת תבעתי עולה ₪${PRICES.claims} חד פעמי. בנוסף יש אגרת בית משפט של כ-1% מסכום התביעה.`
             }
           },
           {

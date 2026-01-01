@@ -4,6 +4,7 @@ import { MessageSquare, FileText, CreditCard, Download, CheckCircle, ArrowLeft, 
 import Link from "next/link";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import { PRICES } from "@/lib/prices";
 
 const steps = [
   {
@@ -49,7 +50,7 @@ const steps = [
     num: 4,
     icon: CreditCard,
     title: "תשלום מאובטח",
-    description: "רק אחרי שראיתם את התביעה ואתם מרוצים - משלמים. תשלום חד פעמי של ₪79, בלי מנויים ובלי התחייבויות.",
+    description: `רק אחרי שראיתם את התביעה ואתם מרוצים - משלמים. תשלום חד פעמי של ₪${PRICES.claims}, בלי מנויים ובלי התחייבויות.`,
     details: [
       "תשלום מאובטח בכרטיס אשראי",
       "קבלה נשלחת אוטומטית",
@@ -118,7 +119,7 @@ export default function HowItWorksPage() {
             </div>
             <div className="flex items-center gap-2 text-neutral-600">
               <CheckCircle className="w-5 h-5 text-emerald-500" />
-              <span>₪79 חד פעמי</span>
+              <span>₪{PRICES.claims} חד פעמי</span>
             </div>
           </div>
         </div>
@@ -241,7 +242,7 @@ export default function HowItWorksPage() {
           </Link>
           
           <p className="text-sm text-blue-200 mt-4">
-            תשלום רק אחרי שהתביעה מוכנה • ₪79 חד פעמי
+            תשלום רק אחרי שהתביעה מוכנה • ₪{PRICES.claims} חד פעמי
           </p>
         </div>
       </section>
