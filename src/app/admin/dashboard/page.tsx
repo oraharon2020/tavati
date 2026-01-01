@@ -11,6 +11,7 @@ import CouponsManager from "@/components/admin/CouponsManager";
 import ReferralsManager from "@/components/admin/ReferralsManager";
 import RemindersManager from "@/components/admin/RemindersManager";
 import UsersManager from "@/components/admin/UsersManager";
+import SettingsManager from "@/components/admin/SettingsManager";
 
 interface Stats {
   totalSessions: number;
@@ -90,7 +91,7 @@ interface ReferralUsage {
   created_at: string;
 }
 
-type Tab = "sessions" | "contacts" | "posts" | "coupons" | "referrals" | "reminders" | "users";
+type Tab = "sessions" | "contacts" | "posts" | "coupons" | "referrals" | "reminders" | "users" | "settings";
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState<Stats | null>(null);
@@ -257,6 +258,7 @@ export default function AdminDashboard() {
     { id: "referrals", label: "הפניות", count: referralCodes.length },
     { id: "reminders", label: "תזכורות", count: 0 },
     { id: "users", label: "משתמשים", count: 0 },
+    { id: "settings", label: "⚙️ הגדרות", count: 0 },
   ];
 
   return (
@@ -338,6 +340,9 @@ export default function AdminDashboard() {
         )}
         {activeTab === "users" && (
           <UsersManager onRefresh={fetchData} />
+        )}
+        {activeTab === "settings" && (
+          <SettingsManager />
         )}
       </main>
     </div>

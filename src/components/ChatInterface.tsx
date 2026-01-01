@@ -19,6 +19,7 @@ import {
   useFileUpload,
   getStepsForService,
   getPriceForService,
+  fetchPrices,
 } from "./chat";
 import { ServiceType, SERVICES } from "@/lib/services";
 
@@ -31,11 +32,18 @@ interface ChatInterfaceProps {
 export default function ChatInterface({ sessionId, phone, serviceType = 'claims' }: ChatInterfaceProps = {}) {
   const [showMobileSteps, setShowMobileSteps] = useState(false);
   const [showAttachmentsScreen, setShowAttachmentsScreen] = useState(false);
+  const [price, setPrice] = useState(getPriceForService(serviceType));
   
   // קבלת קונפיגורציה לפי שירות
   const serviceConfig = SERVICES[serviceType];
   const steps = getStepsForService(serviceType);
-  const price = getPriceForService(serviceType);
+  
+  // טעינת מחירים עדכניים מה-DB
+  useEffect(() => {
+    fetchPrices().then(prices => {
+      setPrice(prices[serviceType] || getPriceForService(serviceType));
+    });
+  }, [serviceType]);
 
   // Session hook - manages all session state
   const session = useSession({ sessionId, phone, serviceType });
