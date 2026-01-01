@@ -61,16 +61,15 @@ export function useChat({
         const parsed = JSON.parse(jsonMatch[1]);
         console.log("Parsed JSON from AI:", parsed);
         
-        // תמיכה גם ב-claimData וגם ב-parkingAppealData
-        // בדוק גם אם יש status: "complete" וגם אם פשוט יש data
-        const claimData = parsed.claimData || parsed.parkingAppealData || null;
+        // תמיכה בכל הפורמטים האפשריים
+        const claimData = parsed.claimData || parsed.parkingAppealData || parsed.appealData || null;
         
         if (claimData) {
           console.log("Extracted claim data:", claimData);
           return claimData;
         }
         
-        // אם אין claimData אבל יש plaintiff/defendant ישירות (מבנה ישן)
+        // אם אין claimData אבל יש plaintiff/defendant/appellant ישירות (מבנה ישן)
         if (parsed.plaintiff || parsed.defendant || parsed.appellant) {
           console.log("Extracted claim data (direct structure):", parsed);
           return parsed as ClaimData;
