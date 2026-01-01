@@ -10,6 +10,17 @@ const nextConfig: NextConfig = {
   
   // Increase function timeout for PDF generation
   serverExternalPackages: ['@sparticuz/chromium'],
+  
+  // Redirect favicon.ico to icon.png
+  async redirects() {
+    return [
+      {
+        source: '/favicon.ico',
+        destination: '/icon.png',
+        permanent: true,
+      },
+    ];
+  },
 };
 
 export default nextConfig;
