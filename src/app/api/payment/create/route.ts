@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 // Grow/Meshulam API configuration
-const MESHULAM_API_URL = process.env.MESHULAM_API_URL || "https://sandbox.meshulam.co.il/api/light/server/1.0";
+const MESHULAM_API_URL = process.env.MESHULAM_API_URL || "https://secure.meshulam.co.il/api/light/server/1.0";
 const MESHULAM_PAGE_CODE = process.env.MESHULAM_PAGE_CODE || "";
 const MESHULAM_USER_ID = process.env.MESHULAM_USER_ID || "";
 

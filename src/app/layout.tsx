@@ -173,7 +173,7 @@ export default function RootLayout({
                   console.log('Meshulam SDK loaded');
                   if (window.growPayment) {
                     window.growPayment.init({
-                      environment: "DEV",
+                      environment: "PRODUCTION",
                       version: 1,
                       events: {
                         onSuccess: function(response) {
