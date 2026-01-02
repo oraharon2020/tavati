@@ -19,19 +19,42 @@ export async function GET() {
   try {
     const supabase = getSupabaseClient();
 
-    // Get unique phone numbers from chat_sessions
+    // Get unique phone numbers from chat_sessions with their details
     const { data: sessions } = await supabase
       .from("chat_sessions")
-      .select("phone")
-      .not("phone", "is", null);
+      .select("phone, created_at, service_type")
+      .not("phone", "is", null)
+      .order("created_at", { ascending: false });
 
-    // Count unique phones
-    const uniquePhones = new Set(
-      (sessions || [])
-        .map(s => normalizePhone(s.phone))
-        .filter(p => p.length > 0)
-    );
-    const totalUniqueUsers = uniquePhones.size;
+    // Build user list with session counts
+    const userMap = new Map<string, { phone: string; firstSeen: string; lastSeen: string; sessionCount: number; services: Set<string> }>();
+    
+    (sessions || []).forEach(s => {
+      const normalizedPhone = normalizePhone(s.phone);
+      if (normalizedPhone.length === 0) return;
+      
+      if (userMap.has(normalizedPhone)) {
+        const existing = userMap.get(normalizedPhone)!;
+        existing.sessionCount++;
+        existing.lastSeen = s.created_at > existing.lastSeen ? s.created_at : existing.lastSeen;
+        existing.firstSeen = s.created_at < existing.firstSeen ? s.created_at : existing.firstSeen;
+        if (s.service_type) existing.services.add(s.service_type);
+      } else {
+        userMap.set(normalizedPhone, {
+          phone: normalizedPhone,
+          firstSeen: s.created_at,
+          lastSeen: s.created_at,
+          sessionCount: 1,
+          services: new Set(s.service_type ? [s.service_type] : [])
+        });
+      }
+    });
+
+    const allUsers = Array.from(userMap.values())
+      .map(u => ({ ...u, services: Array.from(u.services) }))
+      .sort((a, b) => new Date(b.lastSeen).getTime() - new Date(a.lastSeen).getTime());
+
+    const totalUniqueUsers = allUsers.length;
 
     // Get opted-out users
     const { data: optedOutUsers } = await supabase
@@ -46,19 +69,15 @@ export async function GET() {
       (optedOutUsers || []).map(u => normalizePhone(u.phone))
     );
 
-    // Active = unique users minus opted out (only counting those who are actually in sessions)
-    let activeUsersCount = 0;
-    uniquePhones.forEach(phone => {
-      if (!optedOutPhones.has(phone)) {
-        activeUsersCount++;
-      }
-    });
+    // Active = unique users minus opted out
+    const activeUsersCount = allUsers.filter(u => !optedOutPhones.has(u.phone)).length;
 
     return NextResponse.json({
       totalUniqueUsers,
       optedOutCount,
       activeUsersCount,
       optedOutUsers: optedOutUsers || [],
+      allUsers,
     });
   } catch (error) {
     console.error("Users stats error:", error);
