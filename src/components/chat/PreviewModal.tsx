@@ -112,6 +112,30 @@ function ParkingPreviewContent({ claimData }: { claimData: ClaimData }) {
   const appellant = parkingData.appellant;
   const ticket = parkingData.ticket;
   const appeal = parkingData.appeal;
+  
+  // פונקציה להמרת תאריך לפורמט ישראלי
+  const formatDate = (dateStr: string | undefined): string => {
+    if (!dateStr) return '';
+    if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(dateStr)) return dateStr;
+    const match = dateStr.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (match) return `${match[3]}/${match[2]}/${match[1]}`;
+    try {
+      const date = new Date(dateStr);
+      if (!isNaN(date.getTime())) return date.toLocaleDateString('he-IL');
+    } catch { /* ignore */ }
+    return dateStr;
+  };
+
+  // מיפוי סיבות ערעור
+  const reasonLabels: Record<string, string> = {
+    no_sign: 'העדר שילוט או שילוט לקוי',
+    paid: 'תשלום בוצע כנדרש',
+    disabled: 'תו נכה בתוקף',
+    emergency: 'מצב חירום',
+    incorrect: 'פרטים שגויים בדוח',
+    loading: 'פריקה/טעינה מורשית',
+    other: 'סיבה אחרת',
+  };
 
   return (
     <>
@@ -130,10 +154,10 @@ function ParkingPreviewContent({ claimData }: { claimData: ClaimData }) {
       <div className="mb-5 text-black">
         <div className="font-bold text-[12px] mb-2">פרטי המערער:</div>
         <div className="bg-neutral-50 p-3 rounded-lg text-[11px]">
-          <div><strong>שם:</strong> {appellant?.fullName}</div>
-          <div><strong>ת.ז.:</strong> {appellant?.idNumber}</div>
-          <div><strong>כתובת:</strong> {appellant?.address}, {appellant?.city}</div>
-          <div><strong>טלפון:</strong> {appellant?.phone}</div>
+          <div><strong>שם:</strong> {appellant?.fullName || ''}</div>
+          <div><strong>ת.ז.:</strong> {appellant?.idNumber || ''}</div>
+          <div><strong>כתובת:</strong> {appellant?.address || ''}{appellant?.city ? `, ${appellant.city}` : ''}{appellant?.zipCode ? ` ${appellant.zipCode}` : ''}</div>
+          <div><strong>טלפון:</strong> {appellant?.phone || ''}</div>
         </div>
       </div>
 
@@ -141,21 +165,21 @@ function ParkingPreviewContent({ claimData }: { claimData: ClaimData }) {
       <div className="mb-5 text-black">
         <div className="font-bold text-[12px] mb-2">פרטי הדוח:</div>
         <div className="bg-neutral-50 p-3 rounded-lg text-[11px]">
-          <div><strong>מספר דוח:</strong> {ticket?.ticketNumber}</div>
-          <div><strong>תאריך:</strong> {ticket?.date}</div>
-          <div><strong>מיקום:</strong> {ticket?.location}</div>
-          <div><strong>מספר רכב:</strong> {ticket?.vehicleNumber}</div>
-          <div><strong>סכום:</strong> {ticket?.amount} ₪</div>
+          <div><strong>מספר דוח:</strong> {ticket?.ticketNumber || ''}</div>
+          <div><strong>תאריך:</strong> {formatDate(ticket?.date)}</div>
+          <div><strong>מיקום:</strong> {ticket?.location || ''}</div>
+          <div><strong>מספר רכב:</strong> {ticket?.vehicleNumber || ''}</div>
+          <div><strong>סכום:</strong> {ticket?.amount || 0} ₪</div>
         </div>
       </div>
 
       {/* Main Title */}
-      <div className="text-center text-[14px] font-bold underline mb-4 text-black">נושא: ערעור על דוח חניה מס&apos; {ticket?.ticketNumber}</div>
+      <div className="text-center text-[14px] font-bold underline mb-4 text-black">נושא: ערעור על דוח חניה מס&apos; {ticket?.ticketNumber || ''}</div>
 
       {/* Appeal Reason */}
       <div className="mb-4 text-black">
         <div className="font-bold text-[12px] mb-2">סיבת הערעור:</div>
-        <p className="text-[11px]">{appeal?.reasonLabel}</p>
+        <p className="text-[11px]">{reasonLabels[appeal?.reason] || appeal?.reasonLabel || 'לא צוינה'}</p>
       </div>
 
       {/* LOCKED SECTION */}
@@ -163,7 +187,7 @@ function ParkingPreviewContent({ claimData }: { claimData: ClaimData }) {
         <div className="filter blur-[3px] opacity-40 text-neutral-500">
           <div className="mb-3">
             <div className="font-bold text-[12px] mb-2">תיאור האירוע:</div>
-            <p className="text-[11px]">{appeal?.description?.substring(0, 50)}...</p>
+            <p className="text-[11px]">{appeal?.description?.substring(0, 50) || ''}...</p>
           </div>
           <div className="mb-3">
             <div className="font-bold text-[12px] mb-2">הנימוקים המשפטיים:</div>

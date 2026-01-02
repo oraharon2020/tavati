@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Phone, ArrowLeft, Loader2, Scale, Shield } from "lucide-react";
+import Link from "next/link";
 
 interface PhoneAuthProps {
   onAuthenticated: (phone: string, sessionId?: string | null) => void;
@@ -14,10 +15,16 @@ export default function PhoneAuth({ onAuthenticated }: PhoneAuthProps) {
   const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
 
   const handleSendOTP = async () => {
     if (!phone || phone.length < 9) {
       setError("נא להזין מספר טלפון תקין");
+      return;
+    }
+
+    if (!agreedToTerms) {
+      setError("יש לאשר את תנאי השימוש ומדיניות הפרטיות");
       return;
     }
 
@@ -128,9 +135,25 @@ export default function PhoneAuth({ onAuthenticated }: PhoneAuthProps) {
                     <p className="text-red-500 text-sm">{error}</p>
                   )}
 
+                  {/* Terms Agreement */}
+                  <label className="flex items-start gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={agreedToTerms}
+                      onChange={(e) => setAgreedToTerms(e.target.checked)}
+                      className="mt-1 w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    />
+                    <span className="text-sm text-[var(--muted)]">
+                      אני מאשר/ת את
+                      <Link href="/terms" target="_blank" className="text-blue-600 hover:underline mx-1">תנאי השימוש</Link>
+                      ואת
+                      <Link href="/privacy" target="_blank" className="text-blue-600 hover:underline mx-1">מדיניות הפרטיות</Link>
+                    </span>
+                  </label>
+
                   <button
                     onClick={handleSendOTP}
-                    disabled={loading}
+                    disabled={loading || !agreedToTerms}
                     className="w-full py-3 rounded-xl bg-gradient-to-r from-[var(--gradient-start)] to-[var(--gradient-end)] text-white font-medium disabled:opacity-50 flex items-center justify-center gap-2"
                   >
                     {loading ? (

@@ -15,6 +15,7 @@ interface UsePaymentProps {
   hasPaid: boolean;
   attachments?: Attachment[];
   serviceType?: ServiceType;
+  signature?: string | null;
 }
 
 interface UsePaymentReturn {
@@ -49,6 +50,7 @@ export function usePayment({
   hasPaid,
   attachments = [],
   serviceType = 'claims',
+  signature,
 }: UsePaymentProps): UsePaymentReturn {
   const basePrice = getPriceForService(serviceType);
   
@@ -91,12 +93,12 @@ export function usePayment({
     // If we have claim data, generate PDF
     if (claimData) {
       console.log('Generating PDF...');
-      generateClaimPDF(claimData).then(() => {
+      generateClaimPDF(claimData, [], signature).then(() => {
         console.log('PDF generated successfully');
         setPdfDownloaded(true);
       }).catch(console.error);
     }
-  }, [claimData, currentSessionId, setHasPaid, setShowNextSteps, setPdfDownloaded, setShowPaymentModal]);
+  }, [claimData, currentSessionId, setHasPaid, setShowNextSteps, setPdfDownloaded, setShowPaymentModal, signature]);
 
   // Check for payment success when returning from payment page (URL params)
   useEffect(() => {
@@ -295,7 +297,7 @@ export function usePayment({
             }))
           : [];
         
-        await generateClaimPDF(claimData, pdfAttachments);
+        await generateClaimPDF(claimData, pdfAttachments, signature);
         setPdfDownloaded(true);
       } catch (error) {
         console.error("Failed to generate PDF:", error);
@@ -305,7 +307,7 @@ export function usePayment({
       // אם לא שילם, פתח מסך תשלום
       handlePaymentAndDownload();
     }
-  }, [claimData, hasPaid, handlePaymentAndDownload, setPdfDownloaded, attachments]);
+  }, [claimData, hasPaid, handlePaymentAndDownload, setPdfDownloaded, attachments, signature]);
 
   return {
     showPaymentModal,

@@ -32,7 +32,7 @@ async function getBrowser() {
   }
 }
 
-function generateClaimHTML(data: ClaimData): string {
+function generateClaimHTML(data: ClaimData & { signature?: string }): string {
   const today = new Date().toLocaleDateString("he-IL");
   const fee = calculateFee(data.claim.amount);
   
@@ -48,6 +48,11 @@ function generateClaimHTML(data: ClaimData): string {
       : data.defendant.type === "business"
       ? "ע.מ."
       : "ת.ז.";
+
+  // חתימה - תמונה או קו
+  const signatureHTML = data.signature 
+    ? `<img src="${data.signature}" alt="חתימה" style="max-width: 150px; max-height: 60px;" />`
+    : `<div class="signature-line"></div>`;
 
   // סעיפי חוק רלוונטיים לפי סוג התביעה
   const legalBasis = {
@@ -417,7 +422,7 @@ function generateClaimHTML(data: ClaimData): string {
   
   <div class="signature-section">
     <p>בכבוד רב,</p>
-    <div class="signature-line"></div>
+    ${signatureHTML}
     <p><strong>${data.plaintiff.fullName}</strong></p>
     <p>תאריך: ${today}</p>
   </div>

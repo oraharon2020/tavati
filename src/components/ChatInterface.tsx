@@ -72,6 +72,7 @@ export default function ChatInterface({ sessionId, phone, serviceType = 'claims'
     hasPaid: session.hasPaid,
     attachments: session.attachments,
     serviceType,
+    signature: session.signature,
   });
 
   // File upload hook
@@ -397,6 +398,8 @@ export default function ChatInterface({ sessionId, phone, serviceType = 'claims'
           onSendMessage={chat.handleSendMessage}
           serviceType={serviceType}
           price={price}
+          signature={session.signature}
+          onSignatureSaved={session.setSignature}
         />
       </main>
 

@@ -36,8 +36,17 @@ function getDataInfo(data: unknown): { serviceType: ServiceType; filename: strin
 }
 
 // פונקציה להורדת ה-PDF - קוראת ל-API שמייצר PDF עם Puppeteer
-export async function generateClaimPDF(data: ClaimData | unknown, attachments?: PDFAttachment[]): Promise<void> {
+export async function generateClaimPDF(
+  data: ClaimData | unknown, 
+  attachments?: PDFAttachment[],
+  signature?: string | null
+): Promise<void> {
   const { serviceType, filename } = getDataInfo(data);
+  
+  // Add signature to data if provided
+  const dataWithSignature = signature 
+    ? { ...(data as Record<string, unknown>), signature }
+    : data;
   
   const response = await fetch('/api/generate-pdf', {
     method: 'POST',
@@ -45,7 +54,7 @@ export async function generateClaimPDF(data: ClaimData | unknown, attachments?: 
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({ 
-      claimData: data,
+      claimData: dataWithSignature,
       serviceType,
       attachments: attachments || [] 
     }),

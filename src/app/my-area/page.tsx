@@ -144,7 +144,8 @@ export default function MyAreaPage() {
     return types[type] || "לא צוין";
   };
 
-  const getStatusInfo = (status: string, currentStep: number) => {
+  const getStatusInfo = (status: string, currentStep: number, serviceType: "claims" | "parking" = "claims") => {
+    const totalSteps = serviceType === 'parking' ? 4 : 8;
     switch (status) {
       case "paid":
       case "completed":
@@ -163,7 +164,7 @@ export default function MyAreaPage() {
         };
       default:
         return {
-          label: `טיוטה - שלב ${currentStep}/8`,
+          label: `טיוטה - שלב ${currentStep}/${totalSteps}`,
           color: "bg-blue-100 text-blue-700 border-blue-200",
           icon: Clock,
           iconColor: "text-blue-600",
@@ -309,10 +310,12 @@ export default function MyAreaPage() {
         ) : (
           <div className="space-y-4">
             {claims.map((claim) => {
-              const statusInfo = getStatusInfo(claim.status, claim.currentStep);
+              const statusInfo = getStatusInfo(claim.status, claim.currentStep, claim.serviceType);
               const StatusIcon = statusInfo.icon;
               const isExpanded = expandedCard === claim.id;
               const isPaid = claim.status === "paid" || claim.status === "completed";
+              const isParking = claim.serviceType === 'parking';
+              const totalSteps = isParking ? 4 : 8;
               
               return (
                 <motion.div
@@ -349,45 +352,87 @@ export default function MyAreaPage() {
                           </span>
                         </div>
                         
-                        {/* Details Grid */}
+                        {/* Details Grid - Different for Claims vs Parking */}
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
-                          <div className="flex items-center gap-2">
-                            {claim.defendantType === "company" ? (
-                              <Building2 className="w-4 h-4 text-neutral-400" />
-                            ) : claim.defendantType === "business" ? (
-                              <Briefcase className="w-4 h-4 text-neutral-400" />
-                            ) : (
-                              <User className="w-4 h-4 text-neutral-400" />
-                            )}
-                            <div className="min-w-0">
-                              <p className="text-neutral-500 text-xs">נתבע ({getDefendantTypeLabel(claim.defendantType)})</p>
-                              <p className="font-medium text-neutral-900 truncate">{claim.defendant}</p>
-                            </div>
-                          </div>
-                          
-                          <div className="flex items-center gap-2">
-                            <Banknote className="w-4 h-4 text-neutral-400" />
-                            <div>
-                              <p className="text-neutral-500 text-xs">סכום</p>
-                              <p className="font-bold text-neutral-900">{claim.amount > 0 ? `₪${claim.amount.toLocaleString()}` : "לא צוין"}</p>
-                            </div>
-                          </div>
-                          
-                          <div className="flex items-center gap-2">
-                            <FileText className="w-4 h-4 text-neutral-400" />
-                            <div className="min-w-0">
-                              <p className="text-neutral-500 text-xs">שלב</p>
-                              <p className="font-medium text-neutral-900 truncate">{claim.currentStep}/8</p>
-                            </div>
-                          </div>
-                          
-                          <div className="flex items-center gap-2">
-                            <Calendar className="w-4 h-4 text-neutral-400" />
-                            <div>
-                              <p className="text-neutral-500 text-xs">עודכן</p>
-                              <p className="font-medium text-neutral-900">{formatShortDate(claim.updatedAt)}</p>
-                            </div>
-                          </div>
+                          {isParking ? (
+                            // Parking Appeal Fields
+                            <>
+                              <div className="flex items-center gap-2">
+                                <Building2 className="w-4 h-4 text-neutral-400" />
+                                <div className="min-w-0">
+                                  <p className="text-neutral-500 text-xs">רשות</p>
+                                  <p className="font-medium text-neutral-900 truncate">{claim.defendant}</p>
+                                </div>
+                              </div>
+                              
+                              <div className="flex items-center gap-2">
+                                <FileText className="w-4 h-4 text-neutral-400" />
+                                <div>
+                                  <p className="text-neutral-500 text-xs">מספר דוח</p>
+                                  <p className="font-bold text-neutral-900">
+                                    {(claim.claimData as Record<string, Record<string, string>>)?.ticket?.ticketNumber || "לא צוין"}
+                                  </p>
+                                </div>
+                              </div>
+                              
+                              <div className="flex items-center gap-2">
+                                <FileText className="w-4 h-4 text-neutral-400" />
+                                <div className="min-w-0">
+                                  <p className="text-neutral-500 text-xs">שלב</p>
+                                  <p className="font-medium text-neutral-900 truncate">{claim.currentStep}/{totalSteps}</p>
+                                </div>
+                              </div>
+                              
+                              <div className="flex items-center gap-2">
+                                <Calendar className="w-4 h-4 text-neutral-400" />
+                                <div>
+                                  <p className="text-neutral-500 text-xs">עודכן</p>
+                                  <p className="font-medium text-neutral-900">{formatShortDate(claim.updatedAt)}</p>
+                                </div>
+                              </div>
+                            </>
+                          ) : (
+                            // Small Claims Fields
+                            <>
+                              <div className="flex items-center gap-2">
+                                {claim.defendantType === "company" ? (
+                                  <Building2 className="w-4 h-4 text-neutral-400" />
+                                ) : claim.defendantType === "business" ? (
+                                  <Briefcase className="w-4 h-4 text-neutral-400" />
+                                ) : (
+                                  <User className="w-4 h-4 text-neutral-400" />
+                                )}
+                                <div className="min-w-0">
+                                  <p className="text-neutral-500 text-xs">נתבע ({getDefendantTypeLabel(claim.defendantType)})</p>
+                                  <p className="font-medium text-neutral-900 truncate">{claim.defendant}</p>
+                                </div>
+                              </div>
+                              
+                              <div className="flex items-center gap-2">
+                                <Banknote className="w-4 h-4 text-neutral-400" />
+                                <div>
+                                  <p className="text-neutral-500 text-xs">סכום</p>
+                                  <p className="font-bold text-neutral-900">{claim.amount > 0 ? `₪${claim.amount.toLocaleString()}` : "לא צוין"}</p>
+                                </div>
+                              </div>
+                              
+                              <div className="flex items-center gap-2">
+                                <FileText className="w-4 h-4 text-neutral-400" />
+                                <div className="min-w-0">
+                                  <p className="text-neutral-500 text-xs">שלב</p>
+                                  <p className="font-medium text-neutral-900 truncate">{claim.currentStep}/{totalSteps}</p>
+                                </div>
+                              </div>
+                              
+                              <div className="flex items-center gap-2">
+                                <Calendar className="w-4 h-4 text-neutral-400" />
+                                <div>
+                                  <p className="text-neutral-500 text-xs">עודכן</p>
+                                  <p className="font-medium text-neutral-900">{formatShortDate(claim.updatedAt)}</p>
+                                </div>
+                              </div>
+                            </>
+                          )}
                         </div>
                       </div>
                       

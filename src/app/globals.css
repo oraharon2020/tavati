@@ -300,3 +300,43 @@ a[href="#main-content"]:focus {
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
+
+/* ===========================
+   Accessibility Styles
+   =========================== */
+
+/* High Contrast Mode */
+html.high-contrast {
+  filter: contrast(1.25);
+}
+
+html.high-contrast body {
+  background: white !important;
+}
+
+html.high-contrast * {
+  border-color: black !important;
+}
+
+/* Reduced Motion */
+html.reduce-motion *,
+html.reduce-motion *::before,
+html.reduce-motion *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
+
+/* Highlight Links */
+html.highlight-links a {
+  background-color: yellow !important;
+  color: black !important;
+  text-decoration: underline !important;
+  padding: 0 2px;
+}
+
+html.highlight-links a:hover,
+html.highlight-links a:focus {
+  background-color: orange !important;
+}

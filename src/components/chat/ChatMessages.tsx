@@ -8,6 +8,7 @@ import { Message } from "./types";
 import { ClaimData } from "@/lib/pdfGenerator";
 import { QuickReplyButtons, parseQuickReplies } from "./QuickReplyButtons";
 import { ChatInlineForm, parseInlineForm, FormType } from "./ChatInlineForm";
+import SignatureRequest from "./SignatureRequest";
 import { PRICES } from "@/lib/prices";
 
 import { ServiceType } from "@/lib/services";
@@ -23,6 +24,8 @@ interface ChatMessagesProps {
   onSendMessage?: (text: string) => void;
   serviceType?: ServiceType;
   price?: number;
+  signature?: string | null;
+  onSignatureSaved?: (signature: string) => void;
 }
 
 // עיבוד והצגת הודעות - מסיר גם BUTTONS ו-FORM תגים
@@ -159,6 +162,8 @@ export function ChatMessages({
   onSendMessage,
   serviceType = 'claims',
   price,
+  signature,
+  onSignatureSaved,
 }: ChatMessagesProps) {
   // טקסטים דינמיים לפי סוג השירות
   const documentName = serviceType === 'parking' ? 'מכתב הערעור' : 'כתב התביעה';
@@ -257,8 +262,22 @@ export function ChatMessages({
         ))}
       </AnimatePresence>
 
-      {/* Payment Button - as part of chat (only show if not paid and not on next steps) */}
-      {claimData && !showNextSteps && !hasPaid && (
+      {/* Signature Request - show when claim data is ready but not signed yet */}
+      {claimData && !showNextSteps && !hasPaid && !signature && onSignatureSaved && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="my-4"
+        >
+          <SignatureRequest 
+            onSignatureSaved={onSignatureSaved}
+            documentName={documentName}
+          />
+        </motion.div>
+      )}
+
+      {/* Payment Button - as part of chat (only show if not paid, not on next steps, and signed) */}
+      {claimData && !showNextSteps && !hasPaid && (signature || !onSignatureSaved) && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}

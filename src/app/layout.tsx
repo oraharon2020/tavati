@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
 import WhatsAppButton from "@/components/WhatsAppButton";
+import AccessibilityButton from "@/components/AccessibilityButton";
 import { ToastProvider } from "@/components/Toast";
 import { Analytics } from "@vercel/analytics/react";
 import { PRICES } from "@/lib/prices";
@@ -219,6 +220,7 @@ export default function RootLayout({
           <ToastProvider>
             {children}
             <WhatsAppButton />
+            <AccessibilityButton />
           </ToastProvider>
         </AuthProvider>
         <Analytics />

@@ -31,6 +31,8 @@ interface UseSessionReturn {
   setUploadedFiles: React.Dispatch<React.SetStateAction<UploadedFile[]>>;
   attachments: Attachment[];
   setAttachments: React.Dispatch<React.SetStateAction<Attachment[]>>;
+  signature: string | null;
+  setSignature: React.Dispatch<React.SetStateAction<string | null>>;
   saveToSession: (newMessages: Message[], step?: number, claimDataToSave?: ClaimData | null) => Promise<void>;
   resetChat: () => void;
   createNewSession: () => Promise<string | null>;
@@ -48,6 +50,7 @@ export function useSession({ sessionId, phone, serviceType = 'claims' }: UseSess
   const [showWelcome, setShowWelcome] = useState(true);
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [attachments, setAttachments] = useState<Attachment[]>([]);
+  const [signature, setSignature] = useState<string | null>(null);
 
   // טעינת ההודעה הראשונה לפי שירות
   useEffect(() => {
@@ -235,6 +238,8 @@ export function useSession({ sessionId, phone, serviceType = 'claims' }: UseSess
     setUploadedFiles,
     attachments,
     setAttachments,
+    signature,
+    setSignature,
     saveToSession,
     resetChat,
     createNewSession,

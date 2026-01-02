@@ -8,6 +8,8 @@ export { ChatWelcome } from "./ChatWelcome";
 export { NextStepsScreen } from "./NextStepsScreen";
 export { ParkingNextStepsScreen } from "./ParkingNextStepsScreen";
 export { AttachmentsScreen } from "./AttachmentsScreen";
+export { default as SignaturePad } from "./SignaturePad";
+export { default as SignatureRequest } from "./SignatureRequest";
 
 // Hooks
 export * from "./hooks";
