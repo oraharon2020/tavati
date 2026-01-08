@@ -21,7 +21,7 @@ export interface DefendantData {
 }
 
 export interface ClaimDetails {
-  type: "consumer" | "contract" | "rental" | "damage" | "service" | "other";
+  type: "consumer" | "contract" | "rental" | "damage" | "service" | "defamation" | "privacy" | "employment" | "insurance" | "copyright" | "other";
   amount: number;         // סכום התביעה - עד 38,900 ש"ח
   description: string;    // תיאור העובדות
   date: string;           // תאריך האירוע
@@ -104,6 +104,11 @@ export const CLAIM_TYPES = {
   rental: { label: "שכירות", description: "דירה, רכב, ציוד" },
   damage: { label: "נזיקין", description: "נזק לרכוש, נזק גוף קל" },
   service: { label: "שירותים", description: "קבלן, בעל מקצוע, נותן שירות" },
+  defamation: { label: "לשון הרע", description: "פרסום משמיץ, ביקורת פוגענית, השמצה" },
+  privacy: { label: "פגיעה בפרטיות", description: "צילום ללא רשות, חשיפת מידע אישי" },
+  employment: { label: "עבודה", description: "שכר, פיצויי פיטורין, זכויות עובדים" },
+  insurance: { label: "ביטוח", description: "תביעה שנדחתה, פיצוי חסר, אי כיסוי" },
+  copyright: { label: "זכויות יוצרים", description: "גניבת תוכן, שימוש ללא רשות" },
   other: { label: "אחר", description: "סוג תביעה אחר" },
 };
 

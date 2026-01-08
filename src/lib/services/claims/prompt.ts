@@ -46,7 +46,18 @@ export const CLAIMS_SYSTEM_PROMPT = `אתה מערכת מקצועית להגשת
 - פנה למשתמש בשמו הפרטי
 - בקש תיאור של מה קרה (השתלשלות האירועים)
 - שאל מתי זה קרה (תאריך או טווח תאריכים)
-- זהה סוג התביעה: consumer/contract/rental/damage/service/other
+- זהה סוג התביעה מתוך הרשימה:
+  * consumer - צרכנות (מוצר פגום, שירות לקוי, ביטול עסקה)
+  * contract - חוזים (הפרת הסכם, אי עמידה בתנאים)
+  * rental - שכירות (דירה, רכב, ציוד)
+  * damage - נזיקין (נזק לרכוש, נזק גוף קל)
+  * service - שירותים (קבלן, בעל מקצוע)
+  * defamation - לשון הרע (פרסום משמיץ, ביקורת פוגענית, השמצה)
+  * privacy - פגיעה בפרטיות (צילום ללא רשות, חשיפת מידע אישי)
+  * employment - עבודה (שכר, פיצויי פיטורין, זכויות עובדים)
+  * insurance - ביטוח (תביעה שנדחתה, פיצוי חסר)
+  * copyright - זכויות יוצרים (גניבת תוכן, שימוש ללא רשות)
+  * other - אחר
 - **חשוב - שאל על הנזק בפירוט:**
   - "מה הנזק המדויק שנגרם לך?"
   - "האם ניסית לפתור את הבעיה מול הנתבע? מה קרה?"
@@ -164,7 +175,7 @@ export const CLAIMS_SYSTEM_PROMPT = `אתה מערכת מקצועית להגשת
       "phone": "טלפון אם יש"
     },
     "claim": {
-      "type": "consumer/contract/rental/damage/service/other",
+      "type": "consumer/contract/rental/damage/service/defamation/privacy/employment/insurance/copyright/other",
       "amount": 0,
       "description": "תיאור מפורט",
       "date": "תאריך האירוע",

@@ -24,10 +24,17 @@ export const MAX_CLAIM_AMOUNT = 38900; // סכום מקסימלי לתביעה �
 export const CLAIM_TYPES = [
   { id: "consumer", label: "צרכנות", icon: "🛒", description: "מוצר פגום, שירות לקוי, אי עמידה בהתחייבות" },
   { id: "rental", label: "שכירות", icon: "🏠", description: "בעיות עם משכיר, פיקדון, ליקויים בדירה" },
+  { id: "contract", label: "חוזים", icon: "📝", description: "הפרת הסכם, אי עמידה בתנאים" },
+  { id: "damage", label: "נזיקין", icon: "💥", description: "נזק לרכוש, נזק גוף קל" },
+  { id: "service", label: "שירותים", icon: "🔧", description: "קבלן, בעל מקצוע, נותן שירות" },
+  { id: "defamation", label: "לשון הרע", icon: "🗣️", description: "פרסום משמיץ, ביקורת פוגענית, השמצה" },
+  { id: "privacy", label: "פרטיות", icon: "🔒", description: "צילום ללא רשות, חשיפת מידע אישי" },
+  { id: "employment", label: "עבודה", icon: "💼", description: "שכר, פיצויי פיטורין, זכויות עובדים" },
+  { id: "insurance", label: "ביטוח", icon: "🛡️", description: "תביעה שנדחתה, פיצוי חסר" },
+  { id: "copyright", label: "זכויות יוצרים", icon: "©️", description: "גניבת תוכן, שימוש ללא רשות" },
   { id: "tourism", label: "תיירות", icon: "✈️", description: "ביטול טיסה, חבילת נופש, מלון" },
   { id: "vehicle", label: "רכב", icon: "🚗", description: "מוסך, תאונה, קניית רכב" },
   { id: "spam", label: "ספאם", icon: "📱", description: "הודעות פרסומת ללא הסכמה" },
-  { id: "service", label: "ספק שירות", icon: "🔧", description: "קבלן, בעל מקצוע, שירות לקוי" },
   { id: "other", label: "אחר", icon: "📋", description: "סוג תביעה אחר" },
 ] as const;
 
