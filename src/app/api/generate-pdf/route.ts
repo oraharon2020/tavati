@@ -80,12 +80,14 @@ function generateClaimHTML(data: ClaimData & { signature?: string }): string {
   const relevantLaw = legalBasis[data.claim.type] || legalBasis.other;
 
   // פירוט נזקים (אם יש breakdown)
-  let damageItems = data.claim.breakdown ? data.claim.breakdown.split(/[,،;]/).map(s => s.trim()).filter(s => s.length > 0) : [];
+  // מפצלים לפי שורות חדשות או נקודה-פסיק, לא לפי פסיק רגיל (כי סכומים מכילים פסיקים)
+  let damageItems = data.claim.breakdown 
+    ? data.claim.breakdown.split(/[\n;]/).map(s => s.trim()).filter(s => s.length > 0) 
+    : [];
   
-  // אם הפירוט לא מכיל סכומים - הוסף את סכום התביעה
-  const hasAmounts = damageItems.some(item => /\d/.test(item));
-  if (damageItems.length === 0 || !hasAmounts) {
-    damageItems = [`סכום התביעה: ${data.claim.amount.toLocaleString("he-IL")} ₪`];
+  // אם יש רק פריט אחד או אין פירוט - לא להציג רשימה
+  if (damageItems.length <= 1) {
+    damageItems = [];
   }
   
   // ראיות ונספחים
@@ -121,8 +123,8 @@ function generateClaimHTML(data: ClaimData & { signature?: string }): string {
     
     body {
       font-family: 'Rubik', 'David', 'Times New Roman', serif;
-      font-size: 12pt;
-      line-height: 1.8;
+      font-size: 11pt;
+      line-height: 1.6;
       direction: rtl;
       text-align: right;
       color: #000;
@@ -143,7 +145,7 @@ function generateClaimHTML(data: ClaimData & { signature?: string }): string {
     }
     
     .court-name {
-      font-size: 16pt;
+      font-size: 13pt;
       font-weight: bold;
       margin-bottom: 5px;
     }
@@ -167,7 +169,6 @@ function generateClaimHTML(data: ClaimData & { signature?: string }): string {
     
     .case-info-table .info-label {
       font-weight: bold;
-      background: #f5f5f5;
       width: 20%;
     }
     
@@ -221,50 +222,40 @@ function generateClaimHTML(data: ClaimData & { signature?: string }): string {
     
     .main-title {
       text-align: center;
-      font-size: 18pt;
+      font-size: 14pt;
       font-weight: bold;
-      margin: 30px 0 25px 0;
+      margin: 20px 0;
       text-decoration: underline;
     }
     
     .section {
       page-break-inside: avoid;
-      margin-bottom: 20px;
+      margin-bottom: 15px;
     }
     
     .summary-section {
-      background: #f9f9f9;
-      padding: 15px;
-      border: 1px solid #ddd;
-      border-radius: 5px;
-      margin-bottom: 25px;
+      margin-bottom: 20px;
     }
     
     .conclusion-section {
-      background: #f0f7ff;
-      padding: 15px;
-      border: 1px solid #ccc;
-      margin-top: 25px;
+      margin-top: 20px;
     }
     
     h3 {
-      font-size: 13pt;
+      font-size: 12pt;
       font-weight: bold;
-      margin: 25px 0 12px 0;
+      margin: 20px 0 10px 0;
       text-decoration: underline;
     }
     
     p {
-      margin-bottom: 12px;
-      text-align: justify;
-      text-indent: 0;
+      margin-bottom: 10px;
+      text-align: right;
     }
     
     .numbered-paragraph {
-      margin-bottom: 12px;
-      text-align: justify;
-      padding-right: 25px;
-      text-indent: -25px;
+      margin-bottom: 10px;
+      text-align: right;
     }
     
     ol, ul {
@@ -288,10 +279,7 @@ function generateClaimHTML(data: ClaimData & { signature?: string }): string {
     }
     
     .legal-basis {
-      margin: 15px 0;
-      padding: 12px;
-      border: 1px solid #000;
-      background: #f9f9f9;
+      margin: 10px 0;
     }
     
     .signature-section {
