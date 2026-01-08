@@ -80,7 +80,13 @@ function generateClaimHTML(data: ClaimData & { signature?: string }): string {
   const relevantLaw = legalBasis[data.claim.type] || legalBasis.other;
 
   // פירוט נזקים (אם יש breakdown)
-  const damageItems = data.claim.breakdown ? data.claim.breakdown.split(/[,،;]/).map(s => s.trim()).filter(s => s.length > 0) : [];
+  let damageItems = data.claim.breakdown ? data.claim.breakdown.split(/[,،;]/).map(s => s.trim()).filter(s => s.length > 0) : [];
+  
+  // אם הפירוט לא מכיל סכומים - הוסף את סכום התביעה
+  const hasAmounts = damageItems.some(item => /\d/.test(item));
+  if (damageItems.length === 0 || !hasAmounts) {
+    damageItems = [`סכום התביעה: ${data.claim.amount.toLocaleString("he-IL")} ₪`];
+  }
   
   // ראיות ונספחים
   const evidenceItems = data.claim.evidence || [];
@@ -397,7 +403,7 @@ function generateClaimHTML(data: ClaimData & { signature?: string }): string {
   <div class="section summary-section">
     <h3>התביעה בתמצית</h3>
     <p>
-      התובע מתכבד להגיש לבית המשפט הנכבד כתב תביעה זה כנגד הנתבע. בית המשפט הנכבד יתבקש להורות לנתבע להשיב לתובע את מלוא הסכום בסך <strong>${data.claim.amount.toLocaleString("he-IL")} ₪</strong> בצירוף הפרשי הצמדה וריבית כחוק מיום התשלום ועד למועד התשלום בפועל.
+      התובע מתכבד להגיש לבית המשפט הנכבד כתב תביעה זה כנגד הנתבע. בית המשפט הנכבד יתבקש ${data.claim.type === 'defamation' ? 'לחייב את הנתבע לפצות את התובע בגין הפגיעה בשמו הטוב' : data.claim.type === 'privacy' ? 'לחייב את הנתבע לפצות את התובע בגין הפגיעה בפרטיותו' : data.claim.type === 'copyright' ? 'לחייב את הנתבע לפצות את התובע בגין הפרת זכויות היוצרים' : data.claim.type === 'employment' ? 'לחייב את הנתבע לשלם לתובע את זכויותיו כעובד' : 'לחייב את הנתבע לשלם לתובע'} סך <strong>${data.claim.amount.toLocaleString("he-IL")} ₪</strong> בצירוף הפרשי הצמדה וריבית כחוק.
     </p>
   </div>
   
@@ -416,7 +422,13 @@ function generateClaimHTML(data: ClaimData & { signature?: string }): string {
   <div class="section">
     <h3>הרקע העובדתי</h3>
     <p class="numbered-paragraph">
-      3. ביום ${data.claim.date} נוצר קשר עסקי/משפטי בין התובע לבין הנתבע בעניין ${claimTypeHeb}.
+      3. ${data.claim.date ? `ביום ${data.claim.date}` : 'במועד הרלוונטי'} ${
+        data.claim.type === 'defamation' ? 'פרסם הנתבע דברים פוגעניים אודות התובע' :
+        data.claim.type === 'privacy' ? 'פגע הנתבע בפרטיות התובע' :
+        data.claim.type === 'copyright' ? 'עשה הנתבע שימוש ביצירות התובע ללא רשות' :
+        data.claim.type === 'employment' ? 'התקיימו יחסי עובד-מעביד בין התובע לנתבע' :
+        data.claim.type === 'insurance' ? 'הגיש התובע תביעה לנתבעת (חברת הביטוח)' :
+        'נוצר קשר עסקי/משפטי בין התובע לבין הנתבע'}, כמפורט להלן.
     </p>
     <p class="numbered-paragraph">
       4. ${data.claim.description}
@@ -430,33 +442,42 @@ function generateClaimHTML(data: ClaimData & { signature?: string }): string {
     </ul>
     ` : ''}
     <p class="numbered-paragraph">
-      ${evidenceItems.length > 0 ? '6' : '5'}. כפי שיוכח, הנתבע בחר לפעול בחוסר תום לב כלפי התובע, תוך ניסיונות להתחמק מהשלמת התחייבויותיו כנדרש.
+      ${evidenceItems.length > 0 ? '6' : '5'}. ${
+        data.claim.type === 'defamation' ? 'כפי שיוכח, הנתבע פרסם דברים פוגעניים ומשמיצים אודות התובע, ללא כל בסיס עובדתי, תוך פגיעה חמורה בשמו הטוב.' :
+        data.claim.type === 'privacy' ? 'כפי שיוכח, הנתבע פגע בפרטיות התובע באופן בוטה, ללא הסכמתו וללא כל הצדקה חוקית.' :
+        data.claim.type === 'copyright' ? 'כפי שיוכח, הנתבע עשה שימוש ביצירות התובע ללא רשות וללא תשלום, תוך הפרה בוטה של זכויות היוצרים.' :
+        data.claim.type === 'employment' ? 'כפי שיוכח, הנתבע הפר את חובותיו כמעסיק כלפי התובע, תוך פגיעה בזכויותיו על פי דין.' :
+        data.claim.type === 'insurance' ? 'כפי שיוכח, הנתבעת דחתה את תביעת התובע שלא כדין, תוך התעלמות מתנאי הפוליסה וחובת תום הלב.' :
+        'כפי שיוכח, הנתבע בחר לפעול בחוסר תום לב כלפי התובע, תוך ניסיונות להתחמק מהשלמת התחייבויותיו כנדרש.'}
     </p>
   </div>
   
-  ${damageItems.length > 0 ? `
-  <!-- הליקויים/הנזקים -->
-  <div class="section">
-    <h3>הנזקים והליקויים</h3>
-    <p class="numbered-paragraph">
-      ${evidenceItems.length > 0 ? '7' : '6'}. הנתבע הפר את התחייבויותיו ואת החוזה, באופן שגרם לתובע את הנזקים הבאים:
-    </p>
-    <ul class="damage-list">
-      ${damageItems.map((item, i) => `<li>${evidenceItems.length > 0 ? '7' : '6'}.${i + 1}. ${item}</li>`).join('')}
-    </ul>
-  </div>
-  ` : `
   <!-- הנזק -->
   <div class="section">
     <h3>הנזק</h3>
     <p class="numbered-paragraph">
-      ${evidenceItems.length > 0 ? '7' : '6'}. כתוצאה ממעשי ו/או מחדלי הנתבע, נגרם לתובע נזק כספי בסך של ${data.claim.amount.toLocaleString("he-IL")} ₪.
+      ${evidenceItems.length > 0 ? '7' : '6'}. ${
+        data.claim.type === 'defamation' ? `כתוצאה מהפרסום הפוגע, נגרם לתובע נזק לשמו הטוב ועוגמת נפש, המוערכים בסך של <strong>${data.claim.amount.toLocaleString("he-IL")} ₪</strong>.` :
+        data.claim.type === 'privacy' ? `כתוצאה מהפגיעה בפרטיותו, נגרם לתובע נזק המוערך בסך של <strong>${data.claim.amount.toLocaleString("he-IL")} ₪</strong>.` :
+        data.claim.type === 'copyright' ? `כתוצאה מהפרת זכויות היוצרים, נגרם לתובע נזק המוערך בסך של <strong>${data.claim.amount.toLocaleString("he-IL")} ₪</strong>.` :
+        `כתוצאה ממעשי ו/או מחדלי הנתבע, נגרם לתובע נזק כספי בסך של <strong>${data.claim.amount.toLocaleString("he-IL")} ₪</strong>.`}
     </p>
+    ${damageItems.length > 1 ? `
     <p class="numbered-paragraph">
-      ${evidenceItems.length > 0 ? '8' : '7'}. התובע יצא נפסד על לא עוול בכפו מההתקשרות עם הנתבע, שלא כדין ובניגוד גמור להסכמות בין הצדדים.
+      ${evidenceItems.length > 0 ? '8' : '7'}. להלן פירוט הנזקים:
+    </p>
+    <ul class="damage-list">
+      ${damageItems.map((item, i) => `<li>${String.fromCharCode(1488 + i)}. ${item}</li>`).join('')}
+    </ul>
+    ` : ''}
+    <p class="numbered-paragraph">
+      ${damageItems.length > 1 ? (evidenceItems.length > 0 ? '9' : '8') : (evidenceItems.length > 0 ? '8' : '7')}. ${
+        data.claim.type === 'defamation' ? 'התובע נפגע קשות מהפרסום המשמיץ, אשר הוביל לפגיעה במעמדו החברתי והמקצועי.' :
+        data.claim.type === 'privacy' ? 'התובע נפגע קשות מחשיפת פרטיותו, באופן שגרם לו לנזק ועוגמת נפש.' :
+        data.claim.type === 'copyright' ? 'התובע נפגע מהשימוש הבלתי מורשה ביצירותיו, תוך פגיעה בזכויותיו הקנייניות.' :
+        'התובע יצא נפסד על לא עוול בכפו מההתקשרות עם הנתבע, שלא כדין ובניגוד גמור להסכמות בין הצדדים.'}
     </p>
   </div>
-  `}
   
   <!-- הבסיס המשפטי -->
   <div class="section">
@@ -485,23 +506,17 @@ function generateClaimHTML(data: ClaimData & { signature?: string }): string {
         'מעשי הנתבע מהווים הפרה של חוק זכות יוצרים, התשס"ח-2007, אשר קובע כי שימוש ביצירה ללא רשות מהווה הפרת זכויות יוצרים המקנה לבעל הזכויות פיצויים.' :
         'הפרת ההתחייבות על ידי הנתבע מקנה לתובע זכות לתבוע פיצויים בהתאם לדין.'}
     </p>
-    <p class="numbered-paragraph">
-      למותר לציין שהתנהלות הנתבע מפרה אינספור חוקים ודינים, שרירותית וחסרת תום לב, תוך שהיא מסבה נזקים מגוונים ועוגמת נפש עצומה לתובע.
-    </p>
   </div>
   
   <!-- הסעדים המבוקשים -->
   <div class="section">
     <h3>הסעדים המבוקשים</h3>
-    <p>לאור מעשיו ומחדליו של הנתבע כפי שפורטו לעיל, יתבקש בית המשפט הנכבד להורות לנתבע לפעול כדלקמן:</p>
+    <p>לאור האמור לעיל, מתבקש בית המשפט הנכבד:</p>
     <p class="numbered-paragraph">
-      א. להשיב לתובע את מלוא הסכום בסך <strong>${data.claim.amount.toLocaleString("he-IL")} ₪</strong>, בצירוף הפרשי הצמדה וריבית כחוק מיום התשלום ועד התשלום המלא בפועל.
+      א. לחייב את הנתבע לשלם לתובע פיצויים בסך <strong>${data.claim.amount.toLocaleString("he-IL")} ₪</strong>, בצירוף הפרשי הצמדה וריבית כחוק ממועד הגשת התביעה ועד התשלום בפועל.
     </p>
     <p class="numbered-paragraph">
-      ב. לשלם לתובע פיצויים בגין עוגמת הנפש, בזבוז הזמן והטרחה שנגרמו לו.
-    </p>
-    <p class="numbered-paragraph">
-      ג. לשאת בכל הוצאות המשפט, כולל אגרת בית משפט.
+      ב. לחייב את הנתבע בתשלום הוצאות המשפט ואגרת בית המשפט.
     </p>
   </div>
   
@@ -523,10 +538,7 @@ function generateClaimHTML(data: ClaimData & { signature?: string }): string {
   <div class="section conclusion-section">
     <h3>סוף דבר</h3>
     <p>
-      <strong>אשר על כן</strong>, ולאור כל האמור לעיל, מתבקש בית המשפט הנכבד לחייב את הנתבע לשלם לתובע סך <strong>${data.claim.amount.toLocaleString("he-IL")} ₪</strong>, בצירוף הפרשי הצמדה וריבית ממועד הגשת התביעה ועד התשלום המלא בפועל.
-    </p>
-    <p style="text-align: center; margin-top: 15px;">
-      <em>יהא זה מן הדין ומן הצדק להיעתר למבוקש במסגרת כתב תביעה זה.</em>
+      <strong>אשר על כן</strong>, ולאור כל האמור לעיל, מתבקש בית המשפט הנכבד לחייב את הנתבע לשלם לתובע סך <strong>${data.claim.amount.toLocaleString("he-IL")} ₪</strong>, בצירוף הפרשי הצמדה וריבית כחוק.
     </p>
   </div>
   
